@@ -1,7 +1,18 @@
 import { motion } from "motion/react";
 import { Instagram, Facebook, Youtube, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email) {
+      alert("Thank you for subscribing! We'll keep you updated with our latest news.");
+      setEmail("");
+    }
+  };
   return (
     <footer className="bg-[#2D2A26] text-white">
       {/* Newsletter */}
@@ -16,20 +27,24 @@ export function Footer() {
                 Receive exclusive insights, early access to new collections, and beauty rituals from our experts.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <input
                 type="email"
                 placeholder="Your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-[#A88B5C] transition-colors text-sm sm:text-base"
               />
               <motion.button
+                type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="px-6 sm:px-8 py-3 sm:py-4 bg-[#A88B5C] text-white hover:bg-[#8F7A52] transition-colors touch-manipulation flex items-center justify-center"
               >
                 <Mail size={18} className="sm:w-5 sm:h-5" />
               </motion.button>
-            </div>
+            </form>
           </div>
         </div>
       </div>
@@ -49,10 +64,10 @@ export function Footer() {
           <div>
             <h4 className="text-xs sm:text-sm tracking-wider mb-4 sm:mb-6">SHOP</h4>
             <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/60">
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Elixir Collection</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Serums</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Moisturizers</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Gift Sets</a></li>
+              <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Elixir Collection</Link></li>
+              <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Serums</Link></li>
+              <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Moisturizers</Link></li>
+              <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Gift Sets</Link></li>
             </ul>
           </div>
 
@@ -60,10 +75,10 @@ export function Footer() {
           <div>
             <h4 className="text-xs sm:text-sm tracking-wider mb-4 sm:mb-6">ABOUT</h4>
             <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/60">
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Our Story</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Ingredients</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Sustainability</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Science</a></li>
+              <li><Link to="/story" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Our Story</Link></li>
+              <li><Link to="/ingredients" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Ingredients</Link></li>
+              <li><Link to="/franchise" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Franchise</Link></li>
+              <li><a href="#benefits" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Science</a></li>
             </ul>
           </div>
 
@@ -71,10 +86,10 @@ export function Footer() {
           <div>
             <h4 className="text-xs sm:text-sm tracking-wider mb-4 sm:mb-6">SUPPORT</h4>
             <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-white/60">
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Contact Us</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Shipping</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Returns</a></li>
-              <li><a href="#" className="hover:text-[#A88B5C] transition-colors touch-manipulation">FAQ</a></li>
+              <li><Link to="/contact" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Contact Us</Link></li>
+              <li><a href="#benefits" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Shipping</a></li>
+              <li><a href="#benefits" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Returns</a></li>
+              <li><a href="#benefits" className="hover:text-[#A88B5C] transition-colors touch-manipulation">FAQ</a></li>
             </ul>
           </div>
         </div>
@@ -87,13 +102,13 @@ export function Footer() {
 
           {/* Social Links */}
           <div className="flex gap-4 sm:gap-6">
-            <a href="#" className="text-white/40 hover:text-[#A88B5C] transition-colors touch-manipulation">
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-[#A88B5C] transition-colors touch-manipulation">
               <Instagram size={18} className="sm:w-5 sm:h-5" />
             </a>
-            <a href="#" className="text-white/40 hover:text-[#A88B5C] transition-colors touch-manipulation">
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-[#A88B5C] transition-colors touch-manipulation">
               <Facebook size={18} className="sm:w-5 sm:h-5" />
             </a>
-            <a href="#" className="text-white/40 hover:text-[#A88B5C] transition-colors touch-manipulation">
+            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-[#A88B5C] transition-colors touch-manipulation">
               <Youtube size={18} className="sm:w-5 sm:h-5" />
             </a>
           </div>

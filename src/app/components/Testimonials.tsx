@@ -2,6 +2,9 @@ import { motion } from "motion/react";
 import { useInView } from "motion/react";
 import { useRef } from "react";
 import { Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
+import { products } from "../data/products";
 
 const testimonials = [
   {
@@ -25,8 +28,12 @@ const testimonials = [
 ];
 
 export function Testimonials() {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  const featuredProduct = products.find(p => p.featured) || products[0];
 
   return (
     <section className="py-16 sm:py-20 md:py-24 lg:py-32 px-4 sm:px-6 md:px-12 bg-gradient-to-br from-[#FFF8E7] via-white to-[#FFF8E7]">
@@ -103,9 +110,13 @@ export function Testimonials() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                addToCart(featuredProduct);
+                navigate("/products");
+              }}
               className="px-8 sm:px-10 md:px-12 py-3 sm:py-4 bg-[#A88B5C] text-white tracking-wider text-xs sm:text-sm hover:bg-[#8F7A52] transition-colors touch-manipulation w-full sm:w-auto"
             >
-              SHOP ELIXIR - $385
+              SHOP ELIXIR - ${featuredProduct.price}
             </motion.button>
             <div className="mt-4 sm:mt-6 text-[10px] sm:text-xs text-[#5C5852]">
               Complimentary shipping on all orders

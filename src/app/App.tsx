@@ -6,7 +6,14 @@ import { Benefits } from "./components/Benefits";
 import { Products } from "./components/Products";
 import { Testimonials } from "./components/Testimonials";
 import { Footer } from "./components/Footer";
+import { Cart } from "./components/Cart";
 import { ProductsPage } from "./pages/ProductsPage";
+import { ContactPage } from "./pages/ContactPage";
+import { IngredientsPage } from "./pages/IngredientsPage";
+import { StoryPage } from "./pages/StoryPage";
+import { CheckoutPage } from "./pages/CheckoutPage";
+import { FranchisePage } from "./pages/FranchisePage";
+import { CartProvider } from "./context/CartContext";
 
 function HomePage() {
   return (
@@ -24,11 +31,19 @@ function HomePage() {
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/products" element={<ProductsPage />} />
-      </Routes>
-    </Router>
+    <CartProvider>
+      <Router>
+        <Cart />
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/ingredients" element={<IngredientsPage />} />
+          <Route path="/story" element={<StoryPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/franchise" element={<FranchisePage />} />
+        </Routes>
+      </Router>
+    </CartProvider>
   );
 }

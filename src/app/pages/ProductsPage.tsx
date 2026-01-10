@@ -6,9 +6,11 @@ import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { products } from "../data/products";
 import { Footer } from "../components/Footer";
+import { useCart } from "../context/CartContext";
 
 export function ProductsPage() {
   const navigate = useNavigate();
+  const { addToCart, setIsOpen, getTotalItems } = useCart();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
@@ -27,14 +29,28 @@ export function ProductsPage() {
             <ArrowLeft size={20} />
             <span className="text-sm sm:text-base">Back to Home</span>
           </motion.button>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-lg sm:text-xl md:text-2xl tracking-[0.2em] sm:tracking-[0.3em] text-[#A88B5C]"
-          >
-            FOREVER
-          </motion.div>
+          <div className="flex items-center gap-4">
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              onClick={() => navigate("/")}
+              className="text-lg sm:text-xl md:text-2xl tracking-[0.2em] sm:tracking-[0.3em] text-[#A88B5C] hover:text-[#8F7A52] transition-colors touch-manipulation"
+            >
+              FOREVER
+            </motion.button>
+            <button 
+              onClick={() => setIsOpen(true)}
+              className="relative p-2 hover:text-[#A88B5C] transition-colors touch-manipulation"
+            >
+              <ShoppingBag size={20} />
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#A88B5C] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                  {getTotalItems()}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -122,6 +138,7 @@ export function ProductsPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        onClick={() => addToCart(product)}
                         className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#A88B5C] text-white text-xs sm:text-sm hover:bg-[#8F7A52] transition-colors touch-manipulation"
                       >
                         <ShoppingBag size={14} className="sm:w-4 sm:h-4" />

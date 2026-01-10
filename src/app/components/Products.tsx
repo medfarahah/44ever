@@ -5,9 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Star } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { products } from "../data/products";
+import { useCart } from "../context/CartContext";
 
 export function Products() {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
@@ -90,6 +92,7 @@ export function Products() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      onClick={() => addToCart(product)}
                       className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#A88B5C] text-white text-xs sm:text-sm hover:bg-[#8F7A52] transition-colors touch-manipulation"
                     >
                       <ShoppingBag size={14} className="sm:w-4 sm:h-4" />
