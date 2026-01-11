@@ -13,7 +13,8 @@
     "db:studio": "prisma studio --schema=prisma/schema.prisma",
     "db:seed": "node database/init.js",
     "create-admin": "node scripts/create-admin.js",
-    "make-admin": "node scripts/make-admin.js"
+    "make-admin": "node scripts/make-admin.js",
+    "test-api": "node test-api.js"
   },
   "keywords": [
     "express",
