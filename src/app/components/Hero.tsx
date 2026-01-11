@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
@@ -44,6 +44,14 @@ export function Hero() {
               <button onClick={() => scrollToSection("ingredients")} className="hover:text-[#8F7A52] transition-colors touch-manipulation">INGREDIENTS</button>
               <button onClick={() => scrollToSection("benefits")} className="hover:text-[#8F7A52] transition-colors touch-manipulation">BENEFITS</button>
             </div>
+            <Link 
+              to="/admin/login"
+              className="hidden md:flex items-center gap-2 px-3 py-2 text-xs tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors touch-manipulation border border-[#A88B5C]/30 hover:border-[#A88B5C] rounded"
+              title="Admin Panel"
+            >
+              <Shield size={14} />
+              <span>ADMIN</span>
+            </Link>
             <button 
               onClick={() => setIsOpen(true)}
               className="relative p-2 hover:text-[#A88B5C] transition-colors touch-manipulation"
@@ -76,6 +84,10 @@ export function Hero() {
             <button onClick={() => scrollToSection("ingredients")} className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">INGREDIENTS</button>
             <button onClick={() => scrollToSection("benefits")} className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">BENEFITS</button>
             <Link to="/contact" className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">CONTACT</Link>
+            <Link to="/admin/login" className="flex items-center gap-2 w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2 border-t border-[#A88B5C]/20 pt-2">
+              <Shield size={14} />
+              <span>ADMIN PANEL</span>
+            </Link>
           </motion.div>
         )}
       </nav>

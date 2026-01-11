@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2, Users, TrendingUp, Award, Mail, Phone, MapPin } from "lucide-react";
 import { Footer } from "../components/Footer";
+import { StartBusiness } from "../components/StartBusiness";
 
 const benefits = [
   {
@@ -382,6 +383,9 @@ export function FranchisePage() {
           </div>
         </div>
       </section>
+
+      {/* Start Your Business Section */}
+      <StartBusiness />
 
       <Footer />
     </div>
