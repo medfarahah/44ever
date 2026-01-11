@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// API Base URL - use environment variable in production, localhost in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
 
 // Helper function to get auth token (user or admin)
 function getAuthToken(): string | null {
@@ -10,6 +12,10 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  if (!API_BASE_URL) {
+    throw new Error('API server is not configured. Please set VITE_API_URL environment variable.');
+  }
+
   const token = getAuthToken();
   const headers: HeadersInit = {
     ...options.headers,
