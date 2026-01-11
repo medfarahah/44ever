@@ -2,6 +2,10 @@ import prisma from './connection.js';
 
 async function initializeDatabase() {
   try {
+    // Test database connection first
+    await prisma.$connect();
+    console.log('✅ Database connection established');
+    
     // Check if products table is empty, then seed initial data
     const productCount = await prisma.product.count();
     
@@ -84,8 +88,10 @@ async function initializeDatabase() {
 
     console.log('✅ Database initialization complete');
   } catch (error) {
-    console.error('❌ Database initialization error:', error);
-    throw error;
+    // Don't throw - let server start even if database init fails
+    console.error('⚠️ Database initialization error:', error.message || error);
+    console.error('Server will continue, but database operations may fail.');
+    // Don't throw - server should start even without database
   }
 }
 
