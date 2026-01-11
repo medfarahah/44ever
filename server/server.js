@@ -15,6 +15,18 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
+// Log startup info
+console.log('');
+console.log('═══════════════════════════════════════');
+console.log('🔧 Starting Server...');
+console.log('═══════════════════════════════════════');
+console.log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+console.log(`PORT: ${process.env.PORT || '5000 (default)'}`);
+console.log(`DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ NOT SET'}`);
+console.log(`FRONTEND_URL: ${process.env.FRONTEND_URL || 'Not set'}`);
+console.log('═══════════════════════════════════════');
+console.log('');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -46,8 +58,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Initialize database (seed data)
+// Don't block server startup if database init fails
 initializeDatabase().catch(err => {
-  console.error('Failed to initialize database:', err);
+  console.error('⚠️ Failed to initialize database:', err.message);
+  console.error('Server will continue, but database operations may fail.');
 });
 
 // Routes
