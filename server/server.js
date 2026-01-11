@@ -74,10 +74,25 @@ app.use((err, req, res, next) => {
 
 // Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
-  console.log(`📡 API available at http://0.0.0.0:${PORT}/api`);
-  console.log(`💚 Health check: http://0.0.0.0:${PORT}/health`);
-  console.log(`💚 Health check: http://0.0.0.0:${PORT}/api/health`);
+  console.log('');
+  console.log('═══════════════════════════════════════');
+  console.log('🚀 Server Started Successfully!');
+  console.log('═══════════════════════════════════════');
+  console.log(`📍 Listening on: 0.0.0.0:${PORT}`);
+  console.log(`🌐 Local: http://localhost:${PORT}`);
+  console.log(`📡 API: http://localhost:${PORT}/api`);
+  console.log(`💚 Health: http://localhost:${PORT}/health`);
+  console.log(`💚 Health: http://localhost:${PORT}/api/health`);
+  console.log('═══════════════════════════════════════');
+  console.log('');
+  
+  // Log environment info
+  console.log('Environment:');
+  console.log(`  NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`  PORT: ${PORT}`);
+  console.log(`  DATABASE_URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Not set'}`);
+  console.log(`  FRONTEND_URL: ${process.env.FRONTEND_URL || 'Not set (CORS may block requests)'}`);
+  console.log('');
 });
 
 // Handle server errors

@@ -15,7 +15,8 @@
     "create-admin": "node scripts/create-admin.js",
     "make-admin": "node scripts/make-admin.js",
     "test-api": "node test-api.js",
-    "check-users": "node scripts/check-users.js"
+    "check-users": "node scripts/check-users.js",
+    "startup-check": "node startup-check.js"
   },
   "keywords": [
     "express",
