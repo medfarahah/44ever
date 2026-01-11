@@ -30,11 +30,11 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create user
+    // Create user (normalize email to lowercase)
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: email.toLowerCase().trim(),
         password: hashedPassword,
         phone: phone || null,
         role: 'user'
@@ -117,10 +117,11 @@ router.post('/login', async (req, res) => {
     
     // Find user by email (check database)
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: email.toLowerCase().trim() }
     });
     
     if (!user) {
+      console.log(`[Login] User not found: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     
@@ -128,8 +129,11 @@ router.post('/login', async (req, res) => {
     const isValid = await bcrypt.compare(password, user.password);
     
     if (!isValid) {
+      console.log(`[Login] Invalid password for user: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
+    
+    console.log(`[Login] Successful login for user: ${email} (${user.role})`);
     
     // Generate token
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
