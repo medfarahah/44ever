@@ -5,7 +5,7 @@ import prisma from '../database/connection.js';
 async function createAdmin() {
   try {
     const args = process.argv.slice(2);
-    
+
     if (args.length < 3) {
       console.log('Usage: node create-admin.js <name> <email> <password> [phone]');
       console.log('Example: node create-admin.js "Admin User" admin@example.com "securepassword123"');
@@ -13,16 +13,18 @@ async function createAdmin() {
     }
 
     const [name, email, password, phone] = args;
-    
+
     console.log('Creating admin user...');
     console.log('Name:', name);
     console.log('Email:', email);
-    
+
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
-    
+
     if (existingUser) {
       if (existingUser.role === 'admin') {
         console.log('✅ User already exists and is already an admin!');
@@ -38,10 +40,10 @@ async function createAdmin() {
         process.exit(0);
       }
     }
-    
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     // Create admin user
     const user = await prisma.user.create({
       data: {
@@ -52,12 +54,12 @@ async function createAdmin() {
         role: 'admin'
       }
     });
-    
+
     console.log('✅ Admin user created successfully!');
     console.log('User ID:', user.id);
     console.log('Email:', user.email);
     console.log('Role:', user.role);
-    
+
     await prisma.$disconnect();
     process.exit(0);
   } catch (error) {

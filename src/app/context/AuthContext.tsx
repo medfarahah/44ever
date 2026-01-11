@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const token = localStorage.getItem("userToken");
         const userStr = localStorage.getItem("userData");
-        
+
         if (token && userStr) {
           try {
             const userData = JSON.parse(userStr);
@@ -51,11 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     };
-    
+
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await authAPI.login(email, password);
       if (response.token && response.user) {
@@ -63,12 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(true);
         localStorage.setItem("userToken", response.token);
         localStorage.setItem("userData", JSON.stringify(response.user));
-        return true;
+        return { success: true };
       }
-      return false;
+      return { success: false, error: 'Login failed. Invalid response from server.' };
     } catch (error) {
       console.error("Login error:", error);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : 'Invalid email or password';
+      return { success: false, error: errorMessage };
     }
   };
 

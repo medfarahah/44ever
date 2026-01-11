@@ -13,23 +13,24 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
-    
+
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
-    
-    // Check if user already exists
+
+    // Check if user already exists (normalize email for check)
+    const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
-    
+
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
-    
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     // Create user (normalize email to lowercase)
     const user = await prisma.user.create({
       data: {
@@ -48,10 +49,10 @@ router.post('/register', async (req, res) => {
         createdAt: true
       }
     });
-    
+
     // Generate token
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
-    
+
     res.status(201).json({
       token,
       user: {
@@ -67,21 +68,21 @@ router.post('/register', async (req, res) => {
     console.error('Error stack:', error.stack);
     console.error('Error code:', error.code);
     console.error('Error meta:', error.meta);
-    
+
     // Return more detailed error for debugging
     const errorMessage = error.message || 'Unknown error';
     const errorCode = error.code || 'UNKNOWN';
-    
+
     // Handle Prisma errors specifically
     if (error.code === 'P2002') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'User with this email already exists',
         code: 'DUPLICATE_EMAIL'
       });
     }
-    
-    res.status(500).json({ 
-      error: 'Registration failed', 
+
+    res.status(500).json({
+      error: 'Registration failed',
       message: errorMessage,
       code: errorCode,
       details: process.env.NODE_ENV === 'development' ? {
@@ -97,11 +98,11 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
-    
+
     // Check if it's hardcoded admin login (legacy support)
     if (email === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       const token = generateToken({ id: 0, username: ADMIN_USERNAME, role: 'admin' });
@@ -114,30 +115,37 @@ router.post('/login', async (req, res) => {
         }
       });
     }
-    
+
     // Find user by email (check database)
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log(`[Login] Attempting login for: ${normalizedEmail}`);
+
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() }
+      where: { email: normalizedEmail }
     });
-    
+
     if (!user) {
-      console.log(`[Login] User not found: ${email}`);
+      console.log(`[Login] User not found in database: ${normalizedEmail}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
-    
+
+    console.log(`[Login] User found: ${user.email}. Role: ${user.role}. Comparing passwords...`);
+
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
-    
+
     if (!isValid) {
-      console.log(`[Login] Invalid password for user: ${email}`);
+      console.log(`[Login] Password mismatch for user: ${normalizedEmail}`);
+      // Log hash prefix for architecture verification (safe to log prefix)
+      console.log(`[Login] Stored hash starts with: ${user.password.substring(0, 10)}...`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
-    
-    console.log(`[Login] Successful login for user: ${email} (${user.role})`);
-    
+
+    console.log(`[Login] Successful login for user: ${normalizedEmail} (${user.role})`);
+
     // Generate token
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
-    
+
     res.json({
       token,
       user: {
@@ -157,7 +165,7 @@ router.post('/login', async (req, res) => {
 // POST verify token
 router.post('/verify', authenticateToken, (req, res) => {
   try {
-    res.json({ 
+    res.json({
       valid: true,
       user: req.user
     });
@@ -177,7 +185,7 @@ router.get('/me', authenticateToken, async (req, res) => {
         role: 'admin'
       });
     }
-    
+
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
@@ -191,11 +199,11 @@ router.get('/me', authenticateToken, async (req, res) => {
         createdAt: true
       }
     });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     res.json(user);
   } catch (error) {
     console.error('Get user error:', error);
@@ -207,17 +215,17 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.put('/me', authenticateToken, async (req, res) => {
   try {
     const { name, phone, address } = req.body;
-    
+
     // Admin can't update profile this way
     if (req.user.role === 'admin' && req.user.id === 0) {
       return res.status(400).json({ error: 'Admin profile cannot be updated via this endpoint' });
     }
-    
+
     const updateData = {};
     if (name) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone || null;
     if (address) updateData.address = address;
-    
+
     const user = await prisma.user.update({
       where: { id: req.user.id },
       data: updateData,
@@ -231,7 +239,7 @@ router.put('/me', authenticateToken, async (req, res) => {
         updatedAt: true
       }
     });
-    
+
     res.json(user);
   } catch (error) {
     console.error('Update user error:', error);
@@ -248,23 +256,23 @@ router.post('/create-admin', authenticateToken, async (req, res) => {
     }
 
     const { name, email, password, phone } = req.body;
-    
+
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
-    
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
-    
+
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
-    
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     // Create admin user
     const user = await prisma.user.create({
       data: {
@@ -283,7 +291,7 @@ router.post('/create-admin', authenticateToken, async (req, res) => {
         createdAt: true
       }
     });
-    
+
     res.status(201).json({
       message: 'Admin user created successfully',
       user: {
@@ -310,16 +318,16 @@ router.put('/users/:id/role', authenticateToken, async (req, res) => {
 
     const { role } = req.body;
     const userId = parseInt(req.params.id);
-    
+
     if (!role || !['user', 'admin'].includes(role)) {
       return res.status(400).json({ error: 'Valid role (user or admin) is required' });
     }
-    
+
     // Prevent changing the hardcoded admin (id: 0)
     if (userId === 0) {
       return res.status(400).json({ error: 'Cannot change role of system admin' });
     }
-    
+
     const user = await prisma.user.update({
       where: { id: userId },
       data: { role },
@@ -332,7 +340,7 @@ router.put('/users/:id/role', authenticateToken, async (req, res) => {
         updatedAt: true
       }
     });
-    
+
     res.json({
       message: `User role updated to ${role}`,
       user
@@ -366,7 +374,7 @@ router.get('/users', authenticateToken, async (req, res) => {
       },
       orderBy: { createdAt: 'desc' }
     });
-    
+
     res.json(users);
   } catch (error) {
     console.error('Get users error:', error);
@@ -378,41 +386,41 @@ router.get('/users', authenticateToken, async (req, res) => {
 router.post('/change-password', authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
+
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ error: 'Current password and new password are required' });
     }
-    
+
     // Admin can't change password this way
     if (req.user.role === 'admin' && req.user.id === 0) {
       return res.status(400).json({ error: 'Admin password cannot be changed via this endpoint' });
     }
-    
+
     // Get user
     const user = await prisma.user.findUnique({
       where: { id: req.user.id }
     });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     // Verify current password
     const isValid = await bcrypt.compare(currentPassword, user.password);
-    
+
     if (!isValid) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
-    
+
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     // Update password
     await prisma.user.update({
       where: { id: req.user.id },
       data: { password: hashedPassword }
     });
-    
+
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Change password error:', error);

@@ -10,7 +10,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const customers = await prisma.customer.findMany({
       orderBy: { createdAt: 'desc' }
     });
-    
+
     res.json(customers.map(c => ({
       id: c.id,
       name: c.name,
@@ -32,11 +32,11 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const customer = await prisma.customer.findUnique({
       where: { id: parseInt(req.params.id) }
     });
-    
+
     if (!customer) {
       return res.status(404).json({ error: 'Customer not found' });
     }
-    
+
     res.json({
       id: customer.id,
       name: customer.name,
@@ -55,13 +55,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // POST create customer
 router.post('/', async (req, res) => {
   try {
-    const { name, email, phone, address } = req.body;
-    
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if customer already exists
     let customer = await prisma.customer.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     });
-    
+
     if (customer) {
       return res.json({
         id: customer.id,
@@ -73,7 +73,7 @@ router.post('/', async (req, res) => {
         updatedAt: customer.updatedAt
       });
     }
-    
+
     customer = await prisma.customer.create({
       data: {
         name,
@@ -82,7 +82,7 @@ router.post('/', async (req, res) => {
         address: address || {}
       }
     });
-    
+
     res.status(201).json({
       id: customer.id,
       name: customer.name,
@@ -102,18 +102,18 @@ router.post('/', async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { name, email, phone, address } = req.body;
-    
+
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (phone !== undefined) updateData.phone = phone || null;
     if (address) updateData.address = address;
-    
+
     const customer = await prisma.customer.update({
       where: { id: parseInt(req.params.id) },
       data: updateData
     });
-    
+
     res.json({
       id: customer.id,
       name: customer.name,
@@ -138,7 +138,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     await prisma.customer.delete({
       where: { id: parseInt(req.params.id) }
     });
-    
+
     res.json({ message: 'Customer deleted successfully' });
   } catch (error) {
     if (error.code === 'P2025') {
