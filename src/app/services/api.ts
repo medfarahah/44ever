@@ -13,6 +13,7 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   if (!API_BASE_URL) {
+    console.error('API_BASE_URL is not set. Current value:', import.meta.env.VITE_API_URL);
     throw new Error('API server is not configured. Please set VITE_API_URL environment variable.');
   }
 
@@ -30,17 +31,31 @@ async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const url = `${API_BASE_URL}${endpoint}`;
+  console.log(`[API] ${options.method || 'GET'} ${url}`);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || `HTTP error! status: ${response.status}`);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ 
+        error: `Request failed with status ${response.status}` 
+      }));
+      console.error('[API Error]', error);
+      throw new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('[API Network Error]', error);
+      throw new Error('Cannot connect to server. Please check if the backend is running and VITE_API_URL is set correctly.');
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 // Products API
@@ -121,25 +136,48 @@ export const customersAPI = {
 export const authAPI = {
   // User login
   login: async (email: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Login failed' }));
-      throw new Error(error.error || 'Login failed');
+    if (!API_BASE_URL) {
+      throw new Error('API server is not configured. Please set VITE_API_URL environment variable.');
     }
 
-    const data = await response.json();
-    return data;
+    try {
+      const url = `${API_BASE_URL}/auth/login`;
+      console.log('[Auth] Login request to:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Login failed' }));
+        console.error('[Auth] Login error:', error);
+        throw new Error(error.error || error.message || 'Invalid email or password');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        console.error('[Auth] Network error:', error);
+        throw new Error('Cannot connect to server. Please check if the backend is running and VITE_API_URL is set correctly.');
+      }
+      throw error;
+    }
   },
   
   // User registration
   register: async (name: string, email: string, password: string, phone?: string) => {
+    if (!API_BASE_URL) {
+      throw new Error('API server is not configured. Please set VITE_API_URL environment variable.');
+    }
+
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const url = `${API_BASE_URL}/auth/register`;
+      console.log('[Auth] Register request to:', url);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, phone }),
@@ -148,6 +186,7 @@ export const authAPI = {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Registration failed' }));
         const errorMessage = errorData.error || errorData.message || `Registration failed (${response.status})`;
+        console.error('[Auth] Registration error:', errorData);
         throw new Error(errorMessage);
       }
 
@@ -156,7 +195,8 @@ export const authAPI = {
     } catch (error) {
       // Handle network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('Cannot connect to server. Please make sure the backend is running.');
+        console.error('[Auth] Network error:', error);
+        throw new Error('Cannot connect to server. Please check if the backend is running and VITE_API_URL is set correctly.');
       }
       throw error;
     }
