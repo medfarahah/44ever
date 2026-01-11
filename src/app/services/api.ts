@@ -2,6 +2,12 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
 
+// Log API URL for debugging (only in development or if URL is missing)
+if (import.meta.env.DEV || !API_BASE_URL) {
+  console.log('[API] Base URL:', API_BASE_URL || 'NOT SET');
+  console.log('[API] VITE_API_URL env:', import.meta.env.VITE_API_URL || 'NOT SET');
+}
+
 // Helper function to get auth token (user or admin)
 function getAuthToken(): string | null {
   return localStorage.getItem('userToken') || localStorage.getItem('adminToken');
