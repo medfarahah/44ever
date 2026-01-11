@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  category    String    @db.VarChar(100)
+  price       Decimal   @db.Decimal(10, 2)
+  image       String    @db.Text
+  images      String[]  @default([])
+  rating      Int       @default(5)
+  featured    Boolean   @default(false)
+  description String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([featured])
+  @@map("products")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  phone     String?   @db.VarChar(50)
+  role      String    @default("user") @db.VarChar(50)
+  address   Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  orders    Order[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model Customer {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  phone     String?   @db.VarChar(50)
+  address   Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  orders    Order[]
+
+  @@index([email])
+  @@map("customers")
+}
+
+model Order {
+  id          Int       @id @default(autoincrement())
+  orderNumber String    @unique @map("order_number") @db.VarChar(50)
+  userId      Int?      @map("user_id")
+  customerId Int?      @map("customer_id")
+  items       Json
+  shipping    Json
+  payment     Json
+  total       Decimal   @db.Decimal(10, 2)
+  status      String    @default("Pending") @db.VarChar(50)
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  user        User?     @relation(fields: [userId], references: [id])
+  customer    Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([status])
+  @@index([orderNumber])
+  @@map("orders")
+}
+
+model FranchiseApplication {
+  id             Int       @id @default(autoincrement())
+  firstName      String    @map("first_name") @db.VarChar(100)
+  lastName       String    @map("last_name") @db.VarChar(100)
+  email          String    @db.VarChar(255)
+  phone          String    @db.VarChar(50)
+  company        String?   @db.VarChar(255)
+  location       String    @db.VarChar(255)
+  investmentRange String   @map("investment_range") @db.VarChar(100)
+  experience     String    @db.Text
+  message        String    @db.Text
+  status         String    @default("Pending") @db.VarChar(50)
+  notes          String?   @db.Text
+  date           DateTime  @default(now()) @db.Date
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([email])
+  @@map("franchise_applications")
+}

@@ -14,6 +14,9 @@ import { IngredientsPage } from "./pages/IngredientsPage";
 import { StoryPage } from "./pages/StoryPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { FranchisePage } from "./pages/FranchisePage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { AdminLogin } from "./pages/admin/AdminLogin";
 import { DashboardPage } from "./pages/admin/DashboardPage";
 import { OrdersPage } from "./pages/admin/OrdersPage";
@@ -25,6 +28,7 @@ import { FranchiseApplicationsPage } from "./pages/admin/FranchiseApplicationsPa
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { CartProvider } from "./context/CartContext";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 function HomePage() {
@@ -45,9 +49,10 @@ function HomePage() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <CartProvider>
-        <AdminAuthProvider>
-          <Router>
+      <AuthProvider>
+        <CartProvider>
+          <AdminAuthProvider>
+            <Router>
             <Cart />
             <Routes>
               {/* Public Routes */}
@@ -56,10 +61,13 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/ingredients" element={<IngredientsPage />} />
               <Route path="/story" element={<StoryPage />} />
-              <Route path="/checkout" element={<CheckoutPage />} />
-              <Route path="/franchise" element={<FranchisePage />} />
-
-              {/* Admin Routes */}
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/franchise" element={<FranchisePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                
+                {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminLayout><DashboardPage /></AdminLayout>} />
               <Route path="/admin/orders" element={<AdminLayout><OrdersPage /></AdminLayout>} />
@@ -84,6 +92,7 @@ export default function App() {
           </Router>
         </AdminAuthProvider>
       </CartProvider>
+    </AuthProvider>
     </ErrorBoundary>
   );
 }

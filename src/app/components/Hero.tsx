@@ -4,10 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 export function Hero() {
   const navigate = useNavigate();
   const { setIsOpen, getTotalItems } = useCart();
+  const { isAuthenticated, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
@@ -44,14 +46,41 @@ export function Hero() {
               <button onClick={() => scrollToSection("ingredients")} className="hover:text-[#8F7A52] transition-colors touch-manipulation">INGREDIENTS</button>
               <button onClick={() => scrollToSection("benefits")} className="hover:text-[#8F7A52] transition-colors touch-manipulation">BENEFITS</button>
             </div>
-            <Link 
-              to="/admin/login"
-              className="hidden md:flex items-center gap-2 px-3 py-2 text-xs tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors touch-manipulation border border-[#A88B5C]/30 hover:border-[#A88B5C] rounded"
-              title="Admin Panel"
-            >
-              <Shield size={14} />
-              <span>ADMIN</span>
-            </Link>
+            <div className="hidden md:flex items-center gap-3">
+              {isAuthenticated ? (
+                <>
+                  <Link to="/profile" className="text-xs text-[#5C5852] hover:text-[#A88B5C] transition-colors">
+                    {user?.name || user?.email}
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="px-3 py-2 text-xs tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors"
+                  >
+                    LOGOUT
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="px-3 py-2 text-xs tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors">
+                    LOGIN
+                  </Link>
+                  <Link to="/register" className="px-3 py-2 text-xs tracking-wider bg-[#A88B5C] text-white hover:bg-[#8F7A52] transition-colors rounded">
+                    SIGN UP
+                  </Link>
+                </>
+              )}
+              {/* Admin button - only show to admin users */}
+              {isAuthenticated && user?.role === 'admin' && (
+                <Link 
+                  to="/admin/dashboard"
+                  className="flex items-center gap-2 px-3 py-2 text-xs tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors touch-manipulation border border-[#A88B5C]/30 hover:border-[#A88B5C] rounded"
+                  title="Admin Panel"
+                >
+                  <Shield size={14} />
+                  <span>ADMIN</span>
+                </Link>
+              )}
+            </div>
             <button 
               onClick={() => setIsOpen(true)}
               className="relative p-2 hover:text-[#A88B5C] transition-colors touch-manipulation"
@@ -84,10 +113,40 @@ export function Hero() {
             <button onClick={() => scrollToSection("ingredients")} className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">INGREDIENTS</button>
             <button onClick={() => scrollToSection("benefits")} className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">BENEFITS</button>
             <Link to="/contact" className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">CONTACT</Link>
-            <Link to="/admin/login" className="flex items-center gap-2 w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2 border-t border-[#A88B5C]/20 pt-2">
-              <Shield size={14} />
-              <span>ADMIN PANEL</span>
-            </Link>
+            <div className="border-t border-[#A88B5C]/20 pt-2 space-y-2">
+              {isAuthenticated ? (
+                <>
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="text-xs text-[#5C5852] hover:text-[#A88B5C] transition-colors py-2">
+                    {user?.name || user?.email}
+                  </Link>
+                  {/* Admin link - only show to admin users */}
+                  {user?.role === 'admin' && (
+                    <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2 w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">
+                      <Shield size={14} />
+                      <span>ADMIN PANEL</span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2"
+                  >
+                    LOGOUT
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">
+                    LOGIN
+                  </Link>
+                  <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="block w-full text-left text-sm tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors py-2">
+                    SIGN UP
+                  </Link>
+                </>
+              )}
+            </div>
           </motion.div>
         )}
       </nav>

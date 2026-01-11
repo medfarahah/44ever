@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2, Users, TrendingUp, Award, Mail, Phone, MapPin } from "lucide-react";
 import { Footer } from "../components/Footer";
 import { StartBusiness } from "../components/StartBusiness";
+import { franchiseAPI } from "../services/api";
 
 const benefits = [
   {
@@ -42,12 +43,14 @@ export function FranchisePage() {
     message: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Thank you for your interest in becoming a Forever franchise partner! We'll review your application and get back to you within 5-7 business days.");
-    setFormData({
-      firstName: "",
-      lastName: "",
+    try {
+      await franchiseAPI.create(formData);
+      alert("Thank you for your interest in becoming a Forever franchise partner! We'll review your application and get back to you within 5-7 business days.");
+      setFormData({
+        firstName: "",
+        lastName: "",
       email: "",
       phone: "",
       company: "",
@@ -56,6 +59,10 @@ export function FranchisePage() {
       experience: "",
       message: ""
     });
+    } catch (error) {
+      console.error("Failed to submit application:", error);
+      alert("Failed to submit application. Please try again.");
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {

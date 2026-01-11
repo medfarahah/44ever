@@ -90,7 +90,6 @@ export function Footer() {
               <li><a href="#benefits" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Shipping</a></li>
               <li><a href="#benefits" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Returns</a></li>
               <li><a href="#benefits" className="hover:text-[#A88B5C] transition-colors touch-manipulation">FAQ</a></li>
-              <li><Link to="/admin/login" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Admin Panel</Link></li>
             </ul>
           </div>
         </div>

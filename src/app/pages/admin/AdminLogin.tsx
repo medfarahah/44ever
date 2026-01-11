@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, User, AlertCircle } from "lucide-react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
+import { authAPI } from "../../services/api";
 
 export function AdminLogin() {
   const navigate = useNavigate();
@@ -12,21 +13,30 @@ export function AdminLogin() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    // Simulate API call delay
-    setTimeout(() => {
-      const success = login(username, password);
-      if (success) {
-        navigate("/admin/dashboard");
+    try {
+      // Try admin login first (legacy support)
+      const response = await authAPI.adminLogin(username, password);
+      if (response.token && response.user?.role === 'admin') {
+        // Also update AdminAuthContext
+        const success = await login(username, password);
+        if (success) {
+          navigate("/admin/dashboard");
+        } else {
+          setError("Invalid username or password");
+        }
       } else {
         setError("Invalid username or password");
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (

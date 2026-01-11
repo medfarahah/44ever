@@ -1,18 +1,35 @@
 import { motion } from "motion/react";
 import { useInView } from "motion/react";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { ShoppingBag, Star, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { products } from "../data/products";
+import { productsAPI } from "../services/api";
 import { Footer } from "../components/Footer";
 import { useCart } from "../context/CartContext";
+import { Product } from "../data/products";
 
 export function ProductsPage() {
   const navigate = useNavigate();
   const { addToCart, setIsOpen, getTotalItems } = useCart();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await productsAPI.getAll();
+        setProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   return (
     <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
@@ -77,8 +94,11 @@ export function ProductsPage() {
           </motion.div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
-            {products.map((product, index) => (
+          {loading ? (
+            <div className="text-center py-12 text-[#5C5852]">Loading products...</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+              {products.map((product, index) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -148,8 +168,9 @@ export function ProductsPage() {
                   </div>
                 </div>
               </motion.div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

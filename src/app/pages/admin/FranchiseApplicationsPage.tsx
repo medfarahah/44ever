@@ -1,89 +1,28 @@
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Eye, Mail, Phone, MapPin, CheckCircle, XCircle, Clock, User, Building2, DollarSign, X } from "lucide-react";
-
-const applications = [
-  {
-    id: 1,
-    firstName: "John",
-    lastName: "Smith",
-    email: "john.smith@example.com",
-    phone: "+1 (555) 123-4567",
-    company: "Smith Enterprises",
-    location: "New York, NY",
-    investmentRange: "$250,000 - $500,000",
-    experience: "Experienced business owner",
-    message: "I have 10 years of experience in retail and am very interested in bringing Forever to New York.",
-    status: "Pending",
-    date: "2026-01-15",
-    notes: ""
-  },
-  {
-    id: 2,
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah.j@example.com",
-    phone: "+1 (555) 234-5678",
-    company: "",
-    location: "Los Angeles, CA",
-    investmentRange: "$500,000 - $1,000,000",
-    experience: "Previous franchise experience",
-    message: "I currently own 3 successful franchises and would love to add Forever to my portfolio.",
-    status: "Approved",
-    date: "2026-01-14",
-    notes: "Strong candidate with proven track record"
-  },
-  {
-    id: 3,
-    firstName: "Michael",
-    lastName: "Chen",
-    email: "m.chen@example.com",
-    phone: "+1 (555) 345-6789",
-    company: "Chen Holdings",
-    location: "San Francisco, CA",
-    investmentRange: "$1,000,000+",
-    experience: "Experienced business owner",
-    message: "Looking to expand into luxury skincare market. Have prime location in downtown SF.",
-    status: "Reviewing",
-    date: "2026-01-13",
-    notes: "High investment potential"
-  },
-  {
-    id: 4,
-    firstName: "Emily",
-    lastName: "Williams",
-    email: "emily.w@example.com",
-    phone: "+1 (555) 456-7890",
-    company: "",
-    location: "Chicago, IL",
-    investmentRange: "$100,000 - $250,000",
-    experience: "Some business experience",
-    message: "Passionate about skincare and beauty. Ready to start my own business.",
-    status: "Pending",
-    date: "2026-01-12",
-    notes: ""
-  },
-  {
-    id: 5,
-    firstName: "David",
-    lastName: "Brown",
-    email: "d.brown@example.com",
-    phone: "+1 (555) 567-8901",
-    company: "Brown Retail Group",
-    location: "Miami, FL",
-    investmentRange: "$250,000 - $500,000",
-    experience: "Previous franchise experience",
-    message: "Interested in opening multiple locations in Florida.",
-    status: "Rejected",
-    date: "2026-01-11",
-    notes: "Does not meet minimum requirements"
-  }
-];
+import { franchiseAPI } from "../../services/api";
 
 export function FranchiseApplicationsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedApplication, setSelectedApplication] = useState<typeof applications[0] | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const data = await franchiseAPI.getAll();
+        setApplications(data);
+      } catch (error) {
+        console.error("Failed to fetch applications:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApplications();
+  }, []);
 
   const filteredApplications = applications.filter(app => {
     const matchesSearch = 
@@ -185,66 +124,70 @@ export function FranchiseApplicationsPage() {
       </div>
 
       {/* Applications Table */}
-      <div className="bg-white rounded-lg border border-[#A88B5C]/10 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#F5F5F5]">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Applicant</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Investment</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Experience</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredApplications.map((application) => (
-                <motion.tr
-                  key={application.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="hover:bg-[#FFF8E7] transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-[#2D2A26]">
-                      {application.firstName} {application.lastName}
-                    </div>
-                    <div className="text-sm text-[#5C5852]">{application.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#2D2A26]">{application.location}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#A88B5C] font-medium">{application.investmentRange}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-[#5C5852]">{application.experience}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs rounded flex items-center gap-1 w-fit ${getStatusColor(application.status)}`}>
-                      {getStatusIcon(application.status)}
-                      {application.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#5C5852]">
-                    {application.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => setSelectedApplication(application)}
-                      className="text-[#A88B5C] hover:text-[#8F7A52] transition-colors"
-                    >
-                      <Eye size={18} />
-                    </button>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="text-center py-12 text-[#5C5852]">Loading applications...</div>
+      ) : (
+        <div className="bg-white rounded-lg border border-[#A88B5C]/10 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#F5F5F5]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Applicant</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Investment</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Experience</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredApplications.map((application) => (
+                  <motion.tr
+                    key={application.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="hover:bg-[#FFF8E7] transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-[#2D2A26]">
+                        {application.firstName} {application.lastName}
+                      </div>
+                      <div className="text-sm text-[#5C5852]">{application.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-[#2D2A26]">{application.location}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-[#A88B5C] font-medium">{application.investmentRange}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-[#5C5852]">{application.experience}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded flex items-center gap-1 w-fit ${getStatusColor(application.status)}`}>
+                        {getStatusIcon(application.status)}
+                        {application.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#5C5852]">
+                      {application.date}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => setSelectedApplication(application)}
+                        className="text-[#A88B5C] hover:text-[#8F7A52] transition-colors"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Application Detail Modal */}
       {selectedApplication && (
@@ -356,8 +299,19 @@ export function FranchiseApplicationsPage() {
                     <label className="block text-xs text-[#5C5852] mb-2">Admin Notes</label>
                     <textarea
                       rows={3}
-                      defaultValue={selectedApplication.notes}
+                      defaultValue={selectedApplication.notes || ""}
                       placeholder="Add notes about this application..."
+                      onChange={async (e) => {
+                        try {
+                          await franchiseAPI.update(selectedApplication.id, { notes: e.target.value });
+                          const data = await franchiseAPI.getAll();
+                          setApplications(data);
+                          const updated = data.find((app: any) => app.id === selectedApplication.id);
+                          if (updated) setSelectedApplication(updated);
+                        } catch (error) {
+                          console.error("Failed to update notes:", error);
+                        }
+                      }}
                       className="w-full px-4 py-2 border border-[#A88B5C]/20 rounded-lg focus:outline-none focus:border-[#A88B5C] resize-none"
                     />
                   </div>
@@ -367,27 +321,51 @@ export function FranchiseApplicationsPage() {
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-[#A88B5C]/20">
                 <button
-                  onClick={() => {
-                    alert("Application approved!");
-                    setSelectedApplication(null);
+                  onClick={async () => {
+                    try {
+                      await franchiseAPI.update(selectedApplication.id, { status: "Approved" });
+                      const data = await franchiseAPI.getAll();
+                      setApplications(data);
+                      alert("Application approved!");
+                      setSelectedApplication(null);
+                    } catch (error) {
+                      console.error("Failed to update application:", error);
+                      alert("Failed to update application. Please try again.");
+                    }
                   }}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Approve
                 </button>
                 <button
-                  onClick={() => {
-                    alert("Application rejected.");
-                    setSelectedApplication(null);
+                  onClick={async () => {
+                    try {
+                      await franchiseAPI.update(selectedApplication.id, { status: "Rejected" });
+                      const data = await franchiseAPI.getAll();
+                      setApplications(data);
+                      alert("Application rejected.");
+                      setSelectedApplication(null);
+                    } catch (error) {
+                      console.error("Failed to update application:", error);
+                      alert("Failed to update application. Please try again.");
+                    }
                   }}
                   className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Reject
                 </button>
                 <button
-                  onClick={() => {
-                    alert("Status updated to Reviewing");
-                    setSelectedApplication(null);
+                  onClick={async () => {
+                    try {
+                      await franchiseAPI.update(selectedApplication.id, { status: "Reviewing" });
+                      const data = await franchiseAPI.getAll();
+                      setApplications(data);
+                      alert("Status updated to Reviewing");
+                      setSelectedApplication(null);
+                    } catch (error) {
+                      console.error("Failed to update application:", error);
+                      alert("Failed to update application. Please try again.");
+                    }
                   }}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >

@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "dev:backend": "cd server && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\""
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.5",
     "@mui/material": "7.3.5",
+    "@neondatabase/neon-js": "^0.1.0-beta.21",
     "@popperjs/core": "2.11.8",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",
@@ -66,6 +69,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
+    "concurrently": "^8.2.2",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5"
   },

@@ -1,17 +1,34 @@
 import { motion } from "motion/react";
 import { useInView } from "motion/react";
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Star } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { products } from "../data/products";
+import { productsAPI } from "../services/api";
 import { useCart } from "../context/CartContext";
+import { Product } from "../data/products";
 
 export function Products() {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await productsAPI.getAll();
+        setProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   return (
     <section id="products" className="py-16 sm:py-20 md:py-24 lg:py-32 px-4 sm:px-6 md:px-12 bg-gradient-to-b from-white via-[#FFF8E7] to-[#F5E6D3]">
@@ -37,8 +54,11 @@ export function Products() {
 
         {/* Products Grid - Horizontal scroll on mobile, grid on larger screens */}
         <div className="overflow-x-auto sm:overflow-x-visible -mx-4 sm:mx-0 px-4 sm:px-0">
-          <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 min-w-max sm:min-w-0">
-            {products.slice(0, 4).map((product, index) => (
+          {loading ? (
+            <div className="text-center py-12 text-[#5C5852]">Loading products...</div>
+          ) : (
+            <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 min-w-max sm:min-w-0">
+              {products.slice(0, 4).map((product, index) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -102,8 +122,9 @@ export function Products() {
                 </div>
               </div>
             </motion.div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* View All Button */}

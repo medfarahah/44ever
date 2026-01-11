@@ -1,14 +1,17 @@
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CreditCard, Truck, MapPin, Lock } from "lucide-react";
 import { Footer } from "../components/Footer";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
+import { ordersAPI, customersAPI } from "../services/api";
 
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { cart, getTotalPrice, getTotalItems, clearCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
   const [step, setStep] = useState<"shipping" | "payment" | "review">("shipping");
   const [formData, setFormData] = useState({
     // Shipping
@@ -40,6 +43,20 @@ export function CheckoutPage() {
   const shipping = 0; // Free shipping
   const tax = getTotalPrice() * 0.08; // 8% tax
   const total = getTotalPrice() + shipping + tax;
+
+  // Pre-fill form if user is logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const nameParts = (user.name || "").split(" ");
+      setFormData(prev => ({
+        ...prev,
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      }));
+    }
+  }, [isAuthenticated, user]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -80,11 +97,78 @@ export function CheckoutPage() {
     }
   };
 
-  const handlePlaceOrder = () => {
-    // Simulate order processing
-    alert("Order placed successfully! Thank you for your purchase.");
-    clearCart();
-    navigate("/");
+  const handlePlaceOrder = async () => {
+    try {
+      // Create or get customer
+      const customerData = {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        phone: formData.phone,
+        address: {
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country,
+        }
+      };
+
+      let customer;
+      try {
+        customer = await customersAPI.create(customerData);
+      } catch (error) {
+        console.error("Customer creation error:", error);
+        // Continue anyway, customer might already exist
+      }
+
+      // Create order
+      const orderData = {
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image
+        })),
+        customer: customerData,
+        shipping: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          country: formData.country,
+          phone: formData.phone,
+        },
+        payment: {
+          method: "card",
+          cardLast4: formData.cardNumber.slice(-4),
+          billingAddress: formData.sameAsShipping ? {
+            street: formData.address,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            country: formData.country,
+          } : {
+            street: formData.billingAddress,
+            city: formData.billingCity,
+            state: formData.billingState,
+            zipCode: formData.billingZipCode,
+            country: formData.billingCountry,
+          }
+        }
+      };
+
+      await ordersAPI.create(orderData);
+      
+      alert("Order placed successfully! Thank you for your purchase.");
+      clearCart();
+      navigate("/");
+    } catch (error) {
+      console.error("Order creation error:", error);
+      alert("Failed to place order. Please try again.");
+    }
   };
 
   if (cart.length === 0) {

@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { authAPI } from "../services/api";
 
 interface AdminAuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   adminName: string;
 }
@@ -15,31 +16,40 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   // Check if admin is already logged in (from localStorage)
   useEffect(() => {
-    const authStatus = localStorage.getItem("adminAuth");
-    const name = localStorage.getItem("adminName");
-    if (authStatus === "true") {
-      setIsAuthenticated(true);
-      if (name) setAdminName(name);
+    const token = localStorage.getItem("adminToken");
+    const userStr = localStorage.getItem("adminUser");
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setIsAuthenticated(true);
+        setAdminName(user.username || "Admin");
+      } catch (e) {
+        // Invalid user data, clear it
+        localStorage.removeItem("adminToken");
+        localStorage.removeItem("adminUser");
+      }
     }
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    // Simple authentication - in production, this would call an API
-    if (username === "admin" && password === "admin123") {
-      setIsAuthenticated(true);
-      setAdminName(username);
-      localStorage.setItem("adminAuth", "true");
-      localStorage.setItem("adminName", username);
-      return true;
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const response = await authAPI.adminLogin(username, password);
+      if (response.token && response.user?.role === 'admin') {
+        setIsAuthenticated(true);
+        setAdminName(response.user?.username || username);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setAdminName("Admin");
-    localStorage.removeItem("adminAuth");
-    localStorage.removeItem("adminName");
+    authAPI.logout();
   };
 
   return (

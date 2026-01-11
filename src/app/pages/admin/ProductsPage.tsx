@@ -2,15 +2,18 @@ import { motion } from "motion/react";
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { Search, Plus, Edit, Trash2, Image as ImageIcon, Upload, X } from "lucide-react";
-import { products } from "../../data/products";
+import { productsAPI } from "../../services/api";
 import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
+import { Product } from "../../data/products";
 
 export function ProductsPage() {
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<typeof products[0] | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productImages, setProductImages] = useState<Array<{ file: File; preview: string; error?: boolean }>>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -22,6 +25,21 @@ export function ProductsPage() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxImages = 4;
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await productsAPI.getAll();
+        setProducts(data);
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Open add modal if coming from sidebar "Add Product" link
   useEffect(() => {
@@ -131,8 +149,11 @@ export function ProductsPage() {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map((product) => (
+      {loading ? (
+        <div className="text-center py-12 text-[#5C5852]">Loading products...</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => (
           <motion.div
             key={product.id}
             initial={{ opacity: 0, y: 20 }}
@@ -187,14 +208,30 @@ export function ProductsPage() {
                   <Edit size={14} />
                   Edit
                 </button>
-                <button className="px-3 py-2 border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors">
+                <button
+                  onClick={async () => {
+                    if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+                      try {
+                        await productsAPI.delete(product.id);
+                        const data = await productsAPI.getAll();
+                        setProducts(data);
+                        alert("Product deleted successfully!");
+                      } catch (error) {
+                        console.error("Failed to delete product:", error);
+                        alert("Failed to delete product. Please try again.");
+                      }
+                    }
+                  }}
+                  className="px-3 py-2 border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors"
+                >
                   <Trash2 size={14} />
                 </button>
               </div>
             </div>
           </motion.div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Add/Edit Product Modal */}
       {(showAddModal || editingProduct) && (
@@ -222,13 +259,50 @@ export function ProductsPage() {
             </div>
             <form
               className="space-y-4"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                alert(editingProduct ? "Product updated successfully! (This is a demo)" : "Product added successfully! (This is a demo)");
-                setShowAddModal(false);
-                setEditingProduct(null);
-                handleClearAllImages();
-                setFormData({ name: "", category: "", price: "", description: "", featured: false });
+                try {
+                  const formDataToSend = new FormData();
+                  formDataToSend.append('name', formData.name);
+                  formDataToSend.append('category', formData.category);
+                  formDataToSend.append('price', formData.price);
+                  formDataToSend.append('description', formData.description);
+                  formDataToSend.append('featured', formData.featured.toString());
+                  
+                  // Add images
+                  productImages.forEach((img) => {
+                    if (img.file && img.file.size > 0) {
+                      formDataToSend.append('images', img.file);
+                    }
+                  });
+
+                  if (editingProduct) {
+                    // Update existing product
+                    const existingImages = productImages
+                      .filter(img => !img.file || img.file.size === 0)
+                      .map(img => img.preview);
+                    formDataToSend.append('existingImages', JSON.stringify(existingImages));
+                    
+                    await productsAPI.update(editingProduct.id, formDataToSend);
+                    alert("Product updated successfully!");
+                  } else {
+                    // Create new product
+                    await productsAPI.create(formDataToSend);
+                    alert("Product added successfully!");
+                  }
+                  
+                  // Refresh products list
+                  const data = await productsAPI.getAll();
+                  setProducts(data);
+                  
+                  setShowAddModal(false);
+                  setEditingProduct(null);
+                  handleClearAllImages();
+                  setFormData({ name: "", category: "", price: "", description: "", featured: false });
+                } catch (error) {
+                  console.error("Failed to save product:", error);
+                  alert("Failed to save product. Please try again.");
+                }
               }}
             >
               {/* Product Images Upload */}

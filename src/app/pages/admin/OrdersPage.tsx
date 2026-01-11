@@ -1,26 +1,34 @@
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, Eye, Package, Truck, CheckCircle, XCircle } from "lucide-react";
-
-const orders = [
-  { id: "#ORD-001", customer: "Sophia Laurent", email: "sophia@example.com", items: 2, amount: "$385", status: "Completed", date: "2026-01-15", payment: "Paid" },
-  { id: "#ORD-002", customer: "Isabella Chen", email: "isabella@example.com", items: 3, amount: "$570", status: "Processing", date: "2026-01-15", payment: "Paid" },
-  { id: "#ORD-003", customer: "Amélie Dubois", email: "amelie@example.com", items: 1, amount: "$245", status: "Pending", date: "2026-01-14", payment: "Pending" },
-  { id: "#ORD-004", customer: "Emma Wilson", email: "emma@example.com", items: 4, amount: "$760", status: "Completed", date: "2026-01-14", payment: "Paid" },
-  { id: "#ORD-005", customer: "Olivia Brown", email: "olivia@example.com", items: 1, amount: "$195", status: "Shipped", date: "2026-01-13", payment: "Paid" },
-  { id: "#ORD-006", customer: "Charlotte Davis", email: "charlotte@example.com", items: 2, amount: "$430", status: "Processing", date: "2026-01-13", payment: "Paid" },
-  { id: "#ORD-007", customer: "Amelia Miller", email: "amelia@example.com", items: 1, amount: "$285", status: "Completed", date: "2026-01-12", payment: "Paid" },
-  { id: "#ORD-008", customer: "Harper Garcia", email: "harper@example.com", items: 3, amount: "$615", status: "Shipped", date: "2026-01-12", payment: "Paid" },
-];
+import { ordersAPI } from "../../services/api";
 
 export function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await ordersAPI.getAll();
+        setOrders(data);
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, []);
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === "all" || order.status.toLowerCase() === filterStatus.toLowerCase();
+    const customerName = order.customer?.name || order.customer || "";
+    const orderId = order.orderNumber || order.id || "";
+    const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         orderId.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === "all" || order.status?.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesFilter;
   });
 
@@ -80,22 +88,33 @@ export function OrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-lg border border-[#A88B5C]/10 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-[#F5F5F5]">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Items</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
+      {loading ? (
+        <div className="text-center py-12 text-[#5C5852]">Loading orders...</div>
+      ) : (
+        <div className="bg-white rounded-lg border border-[#A88B5C]/10 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#F5F5F5]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Order ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Items</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[#5C5852] uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredOrders.map((order) => {
+                const customerName = order.customer?.name || order.customer || "Unknown";
+                const orderId = order.orderNumber || order.id || "";
+                const itemsCount = order.items?.length || 0;
+                const amount = order.total ? `$${order.total}` : "$0";
+                const status = order.status || "Pending";
+                const date = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "";
+                
+                return (
                 <motion.tr
                   key={order.id}
                   initial={{ opacity: 0 }}
@@ -103,25 +122,25 @@ export function OrdersPage() {
                   className="hover:bg-[#FFF8E7] transition-colors"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-[#2D2A26]">{order.id}</div>
+                    <div className="font-medium text-[#2D2A26]">{orderId}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-[#2D2A26]">{order.customer}</div>
-                    <div className="text-sm text-[#5C5852]">{order.email}</div>
+                    <div className="text-sm font-medium text-[#2D2A26]">{customerName}</div>
+                    <div className="text-sm text-[#5C5852]">{order.customer?.email || ""}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-[#2D2A26]">{order.items} items</div>
+                    <div className="text-sm text-[#2D2A26]">{itemsCount} items</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-[#A88B5C]">{order.amount}</div>
+                    <div className="text-sm font-medium text-[#A88B5C]">{amount}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs rounded ${getStatusColor(order.status)}`}>
-                      {order.status}
+                    <span className={`px-2 py-1 text-xs rounded ${getStatusColor(status)}`}>
+                      {status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-[#5C5852]">
-                    {order.date}
+                    {date}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button className="text-[#A88B5C] hover:text-[#8F7A52] transition-colors">
@@ -129,11 +148,13 @@ export function OrdersPage() {
                     </button>
                   </td>
                 </motion.tr>
-              ))}
-            </tbody>
-          </table>
+                );
+              })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
