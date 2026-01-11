@@ -102,7 +102,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
     
-    // Check if it's admin login
+    // Check if it's hardcoded admin login (legacy support)
     if (email === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       const token = generateToken({ id: 0, username: ADMIN_USERNAME, role: 'admin' });
       return res.json({
@@ -115,20 +115,20 @@ router.post('/login', async (req, res) => {
       });
     }
     
-    // Find user by email
+    // Find user by email (check database)
     const user = await prisma.user.findUnique({
       where: { email }
     });
     
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
     
     // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     
     if (!isValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
     
     // Generate token

@@ -156,25 +156,30 @@ export const authAPI = {
     }
   },
   
-  // Admin login (legacy)
-  adminLogin: async (username: string, password: string) => {
+  // Admin login (supports both hardcoded admin and database admin users)
+  adminLogin: async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: username, password }),
+      body: JSON.stringify({ email, password }),
     });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Login failed' }));
-      throw new Error(error.error || 'Login failed');
+      throw new Error(error.error || 'Invalid email or password');
     }
 
     const data = await response.json();
+    
+    // Check if user is admin (either hardcoded admin or database admin)
     if (data.token && data.user?.role === 'admin') {
       localStorage.setItem('adminToken', data.token);
       localStorage.setItem('adminUser', JSON.stringify(data.user));
+      return data;
     }
-    return data;
+    
+    // If not admin, throw error
+    throw new Error('Access denied. Admin privileges required.');
   },
   
   logout: () => {

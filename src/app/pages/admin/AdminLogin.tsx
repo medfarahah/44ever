@@ -19,21 +19,15 @@ export function AdminLogin() {
     setIsLoading(true);
 
     try {
-      // Try admin login first (legacy support)
-      const response = await authAPI.adminLogin(username, password);
-      if (response.token && response.user?.role === 'admin') {
-        // Also update AdminAuthContext
-        const success = await login(username, password);
-        if (success) {
-          navigate("/admin/dashboard");
-        } else {
-          setError("Invalid username or password");
-        }
+      // Try admin login (supports both hardcoded admin and database admin users)
+      const success = await login(username, password);
+      if (success) {
+        navigate("/admin/dashboard");
       } else {
-        setError("Invalid username or password");
+        setError("Invalid email or password");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
       setIsLoading(false);
     }
@@ -72,15 +66,15 @@ export function AdminLogin() {
             <div>
               <label className="block text-sm text-white/80 mb-2 flex items-center gap-2">
                 <User size={16} />
-                Username
+                Email
               </label>
               <input
-                type="text"
+                type="email"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 className="w-full px-4 py-3 bg-white/10 border border-[#A88B5C]/30 text-white placeholder:text-white/40 focus:outline-none focus:border-[#A88B5C] transition-colors rounded"
-                placeholder="Enter username"
+                placeholder="Enter your email"
               />
             </div>
 
@@ -110,10 +104,10 @@ export function AdminLogin() {
             </motion.button>
           </form>
 
-          {/* Demo Credentials */}
+          {/* Info */}
           <div className="mt-6 pt-6 border-t border-white/10">
             <p className="text-xs text-white/50 text-center">
-              Demo: username: <span className="text-[#A88B5C]">admin</span> / password: <span className="text-[#A88B5C]">admin123</span>
+              Use your admin email and password to login
             </p>
           </div>
         </div>

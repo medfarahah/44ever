@@ -22,7 +22,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       try {
         const user = JSON.parse(userStr);
         setIsAuthenticated(true);
-        setAdminName(user.username || "Admin");
+        // Handle both hardcoded admin (has username) and database admin (has name/email)
+        setAdminName(user.username || user.name || user.email || "Admin");
       } catch (e) {
         // Invalid user data, clear it
         localStorage.removeItem("adminToken");
@@ -36,7 +37,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       const response = await authAPI.adminLogin(username, password);
       if (response.token && response.user?.role === 'admin') {
         setIsAuthenticated(true);
-        setAdminName(response.user?.username || username);
+        // Handle both hardcoded admin (has username) and database admin (has name/email)
+        setAdminName(response.user?.username || response.user?.name || response.user?.email || username);
         return true;
       }
       return false;
