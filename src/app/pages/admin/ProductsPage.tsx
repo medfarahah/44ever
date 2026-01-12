@@ -213,12 +213,14 @@ export function ProductsPage() {
                     if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
                       try {
                         await productsAPI.delete(product.id);
+                        // Refresh products list
                         const data = await productsAPI.getAll();
                         setProducts(data);
                         alert("Product deleted successfully!");
-                      } catch (error) {
+                      } catch (error: any) {
                         console.error("Failed to delete product:", error);
-                        alert("Failed to delete product. Please try again.");
+                        const errorMessage = error?.message || error?.error || "Failed to delete product. Please try again.";
+                        alert(errorMessage);
                       }
                     }
                   }}

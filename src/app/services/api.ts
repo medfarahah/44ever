@@ -88,7 +88,27 @@ export const productsAPI = {
       return res.json();
     });
   },
-  delete: (id: number) => apiRequest<{ message: string }>(`/products/${id}`, { method: 'DELETE' }),
+  delete: async (id: number) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getAuthToken()}`
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: `Request failed with status ${response.status}` }));
+        throw new Error(error.error || error.message || `Failed to delete product (${response.status})`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('[Products API] Delete error:', error);
+      throw error;
+    }
+  },
 };
 
 // Orders API

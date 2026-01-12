@@ -96,6 +96,15 @@ export default async function handler(req, res) {
 
     // DELETE product (admin only)
     if (method === 'DELETE') {
+      // Check if product exists first
+      const existingProduct = await prisma.product.findUnique({
+        where: { id: productId }
+      });
+      
+      if (!existingProduct) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+      
       await prisma.product.delete({
         where: { id: productId }
       });
