@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
   try {
     // GET all products (public)
-    if (method === 'GET' && !req.query.id) {
+    if (method === 'GET') {
       const products = await prisma.product.findMany({
         orderBy: { createdAt: 'desc' }
       });
@@ -32,23 +32,6 @@ export default async function handler(req, res) {
         price: parseFloat(p.price.toString()),
         images: p.images.length > 0 ? p.images : [p.image]
       })));
-    }
-
-    // GET single product (public)
-    if (method === 'GET' && req.query.id) {
-      const product = await prisma.product.findUnique({
-        where: { id: parseInt(req.query.id) }
-      });
-      
-      if (!product) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-      
-      return res.json({
-        ...product,
-        price: parseFloat(product.price.toString()),
-        images: product.images.length > 0 ? product.images : [product.image]
-      });
     }
 
     // POST, PUT, DELETE require authentication
@@ -85,51 +68,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // PUT update product (admin only)
-    if (method === 'PUT') {
-      const { id, name, category, price, description, featured, images } = req.body;
-      
-      const existingProduct = await prisma.product.findUnique({
-        where: { id: parseInt(id) }
-      });
-      
-      if (!existingProduct) {
-        return res.status(404).json({ error: 'Product not found' });
-      }
-      
-      const updateData = {};
-      if (name) updateData.name = name;
-      if (category) updateData.category = category;
-      if (price) updateData.price = parseFloat(price);
-      if (description !== undefined) updateData.description = description;
-      if (featured !== undefined) updateData.featured = featured === 'true' || featured === true;
-      if (images && images.length > 0) {
-        updateData.image = images[0];
-        updateData.images = images;
-      }
-      
-      const product = await prisma.product.update({
-        where: { id: parseInt(id) },
-        data: updateData
-      });
-      
-      return res.json({
-        ...product,
-        price: parseFloat(product.price.toString()),
-        images: product.images.length > 0 ? product.images : [product.image]
-      });
-    }
-
-    // DELETE product (admin only)
-    if (method === 'DELETE') {
-      const { id } = req.query;
-      
-      await prisma.product.delete({
-        where: { id: parseInt(id) }
-      });
-      
-      return res.json({ message: 'Product deleted successfully' });
-    }
+    // PUT and DELETE are handled by api/products/[id].js
+    // This file only handles GET (all) and POST (create)
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {

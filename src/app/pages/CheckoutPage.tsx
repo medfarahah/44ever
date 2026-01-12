@@ -130,16 +130,16 @@ export function CheckoutPage() {
           quantity: item.quantity,
           image: item.image
         })),
-        customer: customerData,
         shipping: {
           firstName: formData.firstName,
           lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
           address: formData.address,
           city: formData.city,
           state: formData.state,
           zipCode: formData.zipCode,
           country: formData.country,
-          phone: formData.phone,
         },
         payment: {
           method: "card",
@@ -157,7 +157,9 @@ export function CheckoutPage() {
             zipCode: formData.billingZipCode,
             country: formData.billingCountry,
           }
-        }
+        },
+        total: total,
+        userId: isAuthenticated && user ? user.id : undefined
       };
 
       await ordersAPI.create(orderData);

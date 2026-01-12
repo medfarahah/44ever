@@ -73,14 +73,21 @@ export default async function handler(req, res) {
       // Create customer if not logged in
       let customerId = null;
       if (!userId) {
-        const customer = await prisma.customer.create({
-          data: {
-            name: `${shipping.firstName} ${shipping.lastName}`,
-            email: shipping.email || '',
-            phone: shipping.phone || '',
-            address: shipping
-          }
+        // Check if customer already exists by email
+        let customer = await prisma.customer.findUnique({
+          where: { email: shipping.email || '' }
         });
+        
+        if (!customer) {
+          customer = await prisma.customer.create({
+            data: {
+              name: `${shipping.firstName} ${shipping.lastName}`,
+              email: shipping.email || '',
+              phone: shipping.phone || '',
+              address: shipping
+            }
+          });
+        }
         customerId = customer.id;
       }
 
@@ -93,7 +100,7 @@ export default async function handler(req, res) {
           shipping,
           payment,
           total: parseFloat(total),
-          status: 'pending'
+          status: 'Pending'
         },
         include: {
           customer: true,

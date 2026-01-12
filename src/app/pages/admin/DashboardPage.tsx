@@ -1,4 +1,6 @@
 import { motion } from "motion/react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   ShoppingBag, 
   DollarSign, 
@@ -8,58 +10,176 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from "lucide-react";
+import { ordersAPI, productsAPI, customersAPI, franchiseAPI } from "../../services/api";
 
-const stats = [
-  {
-    title: "Total Revenue",
-    value: "$124,580",
-    change: "+12.5%",
-    trend: "up",
-    icon: DollarSign,
-    color: "bg-green-500"
-  },
-  {
-    title: "Orders",
-    value: "1,247",
-    change: "+8.2%",
-    trend: "up",
-    icon: ShoppingBag,
-    color: "bg-blue-500"
-  },
-  {
-    title: "Customers",
-    value: "892",
-    change: "+15.3%",
-    trend: "up",
-    icon: Users,
-    color: "bg-purple-500"
-  },
-  {
-    title: "Products",
-    value: "47",
-    change: "+3",
-    trend: "up",
-    icon: Package,
-    color: "bg-[#A88B5C]"
-  }
-];
-
-const recentOrders = [
-  { id: "#ORD-001", customer: "Sophia Laurent", amount: "$385", status: "Completed", date: "2026-01-15" },
-  { id: "#ORD-002", customer: "Isabella Chen", amount: "$570", status: "Processing", date: "2026-01-15" },
-  { id: "#ORD-003", customer: "Amélie Dubois", amount: "$245", status: "Pending", date: "2026-01-14" },
-  { id: "#ORD-004", customer: "Emma Wilson", amount: "$760", status: "Completed", date: "2026-01-14" },
-  { id: "#ORD-005", customer: "Olivia Brown", amount: "$195", status: "Shipped", date: "2026-01-13" },
-];
-
-const topProducts = [
-  { name: "Elixir de Jeunesse", sales: 124, revenue: "$47,740" },
-  { name: "Luminous Night Cream", sales: 89, revenue: "$25,365" },
-  { name: "Golden Radiance Serum", sales: 67, revenue: "$21,440" },
-  { name: "Botanical Eye Elixir", sales: 45, revenue: "$11,025" },
-];
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalCustomers: number;
+  totalProducts: number;
+  recentOrders: any[];
+  topProducts: { name: string; sales: number; revenue: number }[];
+  avgOrderValue: number;
+  pendingOrders: number;
+  completedOrders: number;
+}
 
 export function DashboardPage() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    totalProducts: 0,
+    recentOrders: [],
+    topProducts: [],
+    avgOrderValue: 0,
+    pendingOrders: 0,
+    completedOrders: 0
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch all data in parallel
+        const [orders, products, customers, franchiseApps] = await Promise.all([
+          ordersAPI.getAll().catch(() => []),
+          productsAPI.getAll().catch(() => []),
+          customersAPI.getAll().catch(() => []),
+          franchiseAPI.getAll().catch(() => [])
+        ]);
+
+        // Calculate statistics
+        const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
+        const totalOrders = orders.length;
+        const totalCustomers = customers.length;
+        const totalProducts = products.length;
+        const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+        const pendingOrders = orders.filter((o: any) => o.status === 'Pending').length;
+        const completedOrders = orders.filter((o: any) => o.status === 'Completed').length;
+
+        // Get recent orders (last 5)
+        const recentOrders = orders.slice(0, 5).map((order: any) => ({
+          id: order.orderNumber || `#ORD-${order.id}`,
+          customer: order.user?.name || order.customer?.name || 'Guest',
+          amount: `$${order.total?.toFixed(2) || '0.00'}`,
+          status: order.status || 'Pending',
+          date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
+        }));
+
+        // Calculate top products from order items
+        const productSales: { [key: string]: { name: string; sales: number; revenue: number } } = {};
+        
+        orders.forEach((order: any) => {
+          if (order.items && Array.isArray(order.items)) {
+            order.items.forEach((item: any) => {
+              const productName = item.name || 'Unknown Product';
+              if (!productSales[productName]) {
+                productSales[productName] = {
+                  name: productName,
+                  sales: 0,
+                  revenue: 0
+                };
+              }
+              productSales[productName].sales += item.quantity || 1;
+              productSales[productName].revenue += (item.price || 0) * (item.quantity || 1);
+            });
+          }
+        });
+
+        // Convert to array and sort by revenue
+        const topProducts = Object.values(productSales)
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 4)
+          .map(p => ({
+            name: p.name,
+            sales: p.sales,
+            revenue: `$${p.revenue.toFixed(2)}`
+          }));
+
+        setStats({
+          totalRevenue,
+          totalOrders,
+          totalCustomers,
+          totalProducts,
+          recentOrders,
+          topProducts,
+          avgOrderValue,
+          pendingOrders,
+          completedOrders
+        });
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('en-US').format(num);
+  };
+
+  const dashboardStats = [
+    {
+      title: "Total Revenue",
+      value: formatCurrency(stats.totalRevenue),
+      change: stats.totalOrders > 0 ? `${((stats.completedOrders / stats.totalOrders) * 100).toFixed(1)}%` : "0%",
+      trend: "up",
+      icon: DollarSign,
+      color: "bg-green-500"
+    },
+    {
+      title: "Orders",
+      value: formatNumber(stats.totalOrders),
+      change: stats.pendingOrders > 0 ? `${stats.pendingOrders} pending` : "All processed",
+      trend: stats.pendingOrders > 0 ? "up" : "down",
+      icon: ShoppingBag,
+      color: "bg-blue-500"
+    },
+    {
+      title: "Customers",
+      value: formatNumber(stats.totalCustomers),
+      change: stats.totalCustomers > 0 ? "Active" : "No customers yet",
+      trend: "up",
+      icon: Users,
+      color: "bg-purple-500"
+    },
+    {
+      title: "Products",
+      value: formatNumber(stats.totalProducts),
+      change: stats.totalProducts > 0 ? "In catalog" : "No products",
+      trend: "up",
+      icon: Package,
+      color: "bg-[#A88B5C]"
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#A88B5C] mx-auto mb-4"></div>
+          <p className="text-[#5C5852]">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -70,7 +190,7 @@ export function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {stats.map((stat, index) => {
+        {dashboardStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <motion.div
@@ -113,35 +233,45 @@ export function DashboardPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#2D2A26]">Recent Orders</h2>
-            <button className="text-sm text-[#A88B5C] hover:text-[#8F7A52] transition-colors">
+            <button 
+              onClick={() => navigate('/admin/orders')}
+              className="text-sm text-[#A88B5C] hover:text-[#8F7A52] transition-colors"
+            >
               View All
             </button>
           </div>
-          <div className="space-y-4">
-            {recentOrders.map((order) => (
-              <div
-                key={order.id}
-                className="flex items-center justify-between p-4 bg-[#F5F5F5] rounded-lg hover:bg-[#FFF8E7] transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="font-medium text-[#2D2A26]">{order.id}</span>
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      order.status === "Completed" ? "bg-green-100 text-green-700" :
-                      order.status === "Processing" ? "bg-blue-100 text-blue-700" :
-                      order.status === "Shipped" ? "bg-purple-100 text-purple-700" :
-                      "bg-yellow-100 text-yellow-700"
-                    }`}>
-                      {order.status}
-                    </span>
+          {stats.recentOrders.length > 0 ? (
+            <div className="space-y-4">
+              {stats.recentOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between p-4 bg-[#F5F5F5] rounded-lg hover:bg-[#FFF8E7] transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="font-medium text-[#2D2A26]">{order.id}</span>
+                      <span className={`px-2 py-1 text-xs rounded ${
+                        order.status === "Completed" ? "bg-green-100 text-green-700" :
+                        order.status === "Processing" ? "bg-blue-100 text-blue-700" :
+                        order.status === "Shipped" ? "bg-purple-100 text-purple-700" :
+                        "bg-yellow-100 text-yellow-700"
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <div className="text-sm text-[#5C5852]">{order.customer}</div>
+                    <div className="text-xs text-[#5C5852]">{order.date}</div>
                   </div>
-                  <div className="text-sm text-[#5C5852]">{order.customer}</div>
-                  <div className="text-xs text-[#5C5852]">{order.date}</div>
+                  <div className="text-lg font-bold text-[#A88B5C]">{order.amount}</div>
                 </div>
-                <div className="text-lg font-bold text-[#A88B5C]">{order.amount}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-[#5C5852]">
+              <ShoppingBag size={48} className="mx-auto mb-4 opacity-50" />
+              <p>No orders yet</p>
+            </div>
+          )}
         </motion.div>
 
         {/* Top Products */}
@@ -153,29 +283,39 @@ export function DashboardPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-[#2D2A26]">Top Products</h2>
-            <button className="text-sm text-[#A88B5C] hover:text-[#8F7A52] transition-colors">
+            <button 
+              onClick={() => navigate('/admin/products')}
+              className="text-sm text-[#A88B5C] hover:text-[#8F7A52] transition-colors"
+            >
               View All
             </button>
           </div>
-          <div className="space-y-4">
-            {topProducts.map((product, index) => (
-              <div
-                key={product.name}
-                className="flex items-center justify-between p-4 bg-[#F5F5F5] rounded-lg hover:bg-[#FFF8E7] transition-colors"
-              >
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="w-10 h-10 bg-[#A88B5C] rounded-full flex items-center justify-center text-white font-bold">
-                    {index + 1}
+          {stats.topProducts.length > 0 ? (
+            <div className="space-y-4">
+              {stats.topProducts.map((product, index) => (
+                <div
+                  key={product.name}
+                  className="flex items-center justify-between p-4 bg-[#F5F5F5] rounded-lg hover:bg-[#FFF8E7] transition-colors"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-10 h-10 bg-[#A88B5C] rounded-full flex items-center justify-center text-white font-bold">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-[#2D2A26]">{product.name}</div>
+                      <div className="text-sm text-[#5C5852]">{product.sales} sales</div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-medium text-[#2D2A26]">{product.name}</div>
-                    <div className="text-sm text-[#5C5852]">{product.sales} sales</div>
-                  </div>
+                  <div className="text-lg font-bold text-[#A88B5C]">{product.revenue}</div>
                 </div>
-                <div className="text-lg font-bold text-[#A88B5C]">{product.revenue}</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-[#5C5852]">
+              <Package size={48} className="mx-auto mb-4 opacity-50" />
+              <p>No product sales yet</p>
+            </div>
+          )}
         </motion.div>
       </div>
 
@@ -192,15 +332,23 @@ export function DashboardPage() {
         </div>
         <div className="grid sm:grid-cols-3 gap-4">
           <div>
-            <div className="text-2xl font-bold mb-1">98%</div>
-            <div className="text-sm text-white/80">Customer Satisfaction</div>
+            <div className="text-2xl font-bold mb-1">
+              {stats.totalOrders > 0 
+                ? `${((stats.completedOrders / stats.totalOrders) * 100).toFixed(0)}%` 
+                : '0%'}
+            </div>
+            <div className="text-sm text-white/80">Order Completion Rate</div>
           </div>
           <div>
-            <div className="text-2xl font-bold mb-1">2.4 days</div>
-            <div className="text-sm text-white/80">Avg. Delivery Time</div>
+            <div className="text-2xl font-bold mb-1">
+              {stats.pendingOrders}
+            </div>
+            <div className="text-sm text-white/80">Pending Orders</div>
           </div>
           <div>
-            <div className="text-2xl font-bold mb-1">$1,247</div>
+            <div className="text-2xl font-bold mb-1">
+              {formatCurrency(stats.avgOrderValue)}
+            </div>
             <div className="text-sm text-white/80">Avg. Order Value</div>
           </div>
         </div>
@@ -208,5 +356,3 @@ export function DashboardPage() {
     </div>
   );
 }
-
-
