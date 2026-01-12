@@ -4,10 +4,11 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "npm run prisma:generate && vite build",
     "dev": "vite",
     "dev:backend": "cd server && npm run dev",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\"",
+    "prisma:generate": "cd server && npx prisma generate --schema=prisma/schema.prisma"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -15,6 +16,13 @@
     "@mui/icons-material": "7.3.5",
     "@mui/material": "7.3.5",
     "@neondatabase/neon-js": "^0.1.0-beta.21",
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.2.0",
+    "@prisma/client": "^7.2.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^7.2.0",
+    "ws": "^8.19.0",
     "@popperjs/core": "2.11.8",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",

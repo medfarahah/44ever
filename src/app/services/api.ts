@@ -1,11 +1,12 @@
-// API Base URL - use environment variable in production, localhost in development
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:5000/api' : '');
+// API Base URL - use relative paths for Vercel serverless functions
+// In development, use localhost backend; in production, use relative paths
+const API_BASE_URL = import.meta.env.DEV 
+  ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api')
+  : '/api'; // Relative path for Vercel serverless functions
 
-// Log API URL for debugging (only in development or if URL is missing)
-if (import.meta.env.DEV || !API_BASE_URL) {
-  console.log('[API] Base URL:', API_BASE_URL || 'NOT SET');
-  console.log('[API] VITE_API_URL env:', import.meta.env.VITE_API_URL || 'NOT SET');
+// Log API URL for debugging
+if (import.meta.env.DEV) {
+  console.log('[API] Base URL:', API_BASE_URL);
 }
 
 // Helper function to get auth token (user or admin)
@@ -18,10 +19,7 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  if (!API_BASE_URL) {
-    console.error('API_BASE_URL is not set. Current value:', import.meta.env.VITE_API_URL);
-    throw new Error('API server is not configured. Please set VITE_API_URL environment variable.');
-  }
+  // API_BASE_URL is always set (either localhost in dev or '/api' in production)
 
   const token = getAuthToken();
   const headers: HeadersInit = {

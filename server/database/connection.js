@@ -16,14 +16,15 @@ neonConfig.webSocketConstructor = ws;
 
 const connectionString = process.env.DATABASE_URL;
 
+// Don't throw error on import - let it fail gracefully at runtime
 if (!connectionString || connectionString.includes('YourPassword')) {
-  console.error('❌ DATABASE_URL is not set or contains placeholder!');
-  console.error('Please update server/.env with your actual Neon database connection string.');
-  console.error('Get it from: https://console.neon.tech');
-  throw new Error('DATABASE_URL environment variable is required and must have a valid password');
+  console.warn('⚠️ DATABASE_URL is not set or contains placeholder!');
+  console.warn('Database operations will fail until DATABASE_URL is configured.');
 }
 
-console.log('✅ DATABASE_URL is set:', connectionString.substring(0, 30) + '...');
+if (connectionString && !connectionString.includes('YourPassword')) {
+  console.log('✅ DATABASE_URL is set:', connectionString.substring(0, 30) + '...');
+}
 
 const adapter = new PrismaNeon({ connectionString });
 const prisma = global.prisma || new PrismaClient({ adapter });
