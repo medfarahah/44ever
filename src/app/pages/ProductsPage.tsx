@@ -66,7 +66,7 @@ export function ProductsPage() {
             >
               FOREVER
             </motion.button>
-            <button 
+            <button
               onClick={() => setIsOpen(true)}
               className="relative p-2 hover:text-[#A88B5C] transition-colors touch-manipulation"
             >
@@ -107,84 +107,84 @@ export function ProductsPage() {
           {loading ? (
             <div className="text-center py-12 text-[#5C5852]">Loading products...</div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8">
               {products.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="group"
-              >
-                <div className="bg-gradient-to-br from-white to-[#FFF8E7]/90 backdrop-blur-sm border border-[#A88B5C]/20 hover:border-[#A88B5C]/50 transition-all duration-500 hover:shadow-xl overflow-hidden h-full flex flex-col">
-                  {/* Product Image */}
-                  <div className="relative overflow-hidden">
-                    <div className="aspect-square relative">
-                      <ImageWithFallback
-                        src={product.image || product.images?.[0] || '/images/default-product.jpg'}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        onError={(e) => {
-                          console.error('Product image failed to load:', {
-                            productId: product.id,
-                            productName: product.name,
-                            imageSrc: product.image
-                          });
-                        }}
-                      />
-                      {product.featured && (
-                        <div className="absolute top-4 left-4 bg-[#A88B5C] text-white px-3 py-1 text-[10px] sm:text-xs tracking-wider">
-                          FEATURED
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="p-4 sm:p-6 flex flex-col flex-grow">
-                    <div className="mb-2 text-[10px] sm:text-xs tracking-[0.2em] text-[#A88B5C]">
-                      {product.category}
-                    </div>
-                    <h3 className="text-lg sm:text-xl mb-2 sm:mb-3 text-[#2D2A26] font-medium">
-                      {product.name}
-                    </h3>
-                    
-                    {product.description && (
-                      <p className="text-xs sm:text-sm text-[#5C5852] mb-3 sm:mb-4 leading-relaxed flex-grow">
-                        {product.description}
-                      </p>
-                    )}
-                    
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 mb-3 sm:mb-4">
-                      {[...Array(product.rating)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={12}
-                          className="sm:w-3.5 sm:h-3.5 fill-[#A88B5C] text-[#A88B5C]"
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  className="group"
+                >
+                  <div className="bg-gradient-to-br from-white to-[#FFF8E7]/90 backdrop-blur-sm border border-[#A88B5C]/20 hover:border-[#A88B5C]/50 transition-all duration-500 hover:shadow-xl overflow-hidden h-full flex flex-col">
+                    {/* Product Image */}
+                    <div className="relative overflow-hidden">
+                      <div className="aspect-square relative">
+                        <ImageWithFallback
+                          src={product.image || product.images?.[0] || '/images/default-product.jpg'}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          onError={(e) => {
+                            console.error('Product image failed to load:', {
+                              productId: product.id,
+                              productName: product.name,
+                              imageSrc: product.image
+                            });
+                          }}
                         />
-                      ))}
+                        {product.featured && (
+                          <div className="absolute top-4 left-4 bg-[#A88B5C] text-white px-3 py-1 text-[10px] sm:text-xs tracking-wider">
+                            FEATURED
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      </div>
                     </div>
 
-                    {/* Price and Button */}
-                    <div className="flex items-center justify-between gap-4 mt-auto">
-                      <div className="text-xl sm:text-2xl text-[#A88B5C] font-medium">
-                        ${product.price}
+                    {/* Product Info */}
+                    <div className="p-4 sm:p-6 flex flex-col flex-grow">
+                      <div className="mb-2 text-[10px] sm:text-xs tracking-[0.2em] text-[#A88B5C]">
+                        {product.category}
                       </div>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => addToCart(product)}
-                        className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#A88B5C] text-white text-xs sm:text-sm hover:bg-[#8F7A52] transition-colors touch-manipulation"
-                      >
-                        <ShoppingBag size={14} className="sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">Add</span>
-                      </motion.button>
+                      <h3 className="text-lg sm:text-xl mb-2 sm:mb-3 text-[#2D2A26] font-medium">
+                        {product.name}
+                      </h3>
+
+                      {product.description && (
+                        <p className="text-xs sm:text-sm text-[#5C5852] mb-3 sm:mb-4 leading-relaxed flex-grow">
+                          {product.description}
+                        </p>
+                      )}
+
+                      {/* Rating */}
+                      <div className="flex items-center gap-1 mb-3 sm:mb-4">
+                        {[...Array(product.rating)].map((_, i) => (
+                          <Star
+                            key={i}
+                            size={12}
+                            className="sm:w-3.5 sm:h-3.5 fill-[#A88B5C] text-[#A88B5C]"
+                          />
+                        ))}
+                      </div>
+
+                      {/* Price and Button */}
+                      <div className="flex items-center justify-between gap-4 mt-auto">
+                        <div className="text-xl sm:text-2xl text-[#A88B5C] font-medium">
+                          ${product.price}
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => addToCart(product)}
+                          className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-[#A88B5C] text-white text-xs sm:text-sm hover:bg-[#8F7A52] transition-colors touch-manipulation"
+                        >
+                          <ShoppingBag size={14} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">Add</span>
+                        </motion.button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
               ))}
             </div>
           )}

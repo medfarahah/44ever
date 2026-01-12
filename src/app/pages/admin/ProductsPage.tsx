@@ -90,7 +90,7 @@ export function ProductsPage() {
     for (const file of filesToAdd) {
       const isValidType = file.type.startsWith('image/');
       const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
-      
+
       if (!isValidType) {
         alert(`${file.name} is not a valid image file.`);
         continue;
@@ -192,102 +192,102 @@ export function ProductsPage() {
       {loading ? (
         <div className="text-center py-12 text-[#5C5852]">Loading products...</div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredProducts.map((product) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg border border-[#A88B5C]/10 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
-          >
-            <div className="aspect-square bg-[#F5F5F5] overflow-hidden relative">
-              <ImageWithFallback
-                src={product.image || product.images?.[0] || '/images/default-product.jpg'}
-                alt={product.name}
-                className="w-full h-full object-cover"
-                fallback={
-                  <div className="w-full h-full flex items-center justify-center bg-[#F5F5F5]">
-                    <ImageIcon className="text-[#A88B5C]/30" size={48} />
-                    <p className="text-xs text-[#5C5852] mt-2 ml-2">No image</p>
-                  </div>
-                }
-                onError={(e) => {
-                  console.error('Admin product image failed to load:', {
-                    productId: product.id,
-                    productName: product.name,
-                    imageSrc: product.image,
-                    images: product.images
-                  });
-                }}
-              />
-              {product.featured && (
-                <div className="absolute top-2 left-2 px-2 py-1 bg-[#A88B5C] text-white text-xs rounded">
-                  Featured
-                </div>
-              )}
-            </div>
-            <div className="p-4">
-              <div className="text-xs text-[#A88B5C] mb-1">{product.category}</div>
-              <h3 className="font-medium text-[#2D2A26] mb-2">{product.name}</h3>
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-lg font-bold text-[#A88B5C]">${product.price}</div>
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-lg border border-[#A88B5C]/10 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <div className="aspect-square bg-[#F5F5F5] overflow-hidden relative">
+                <ImageWithFallback
+                  src={product.image || product.images?.[0] || '/images/default-product.jpg'}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  fallback={
+                    <div className="w-full h-full flex items-center justify-center bg-[#F5F5F5]">
+                      <ImageIcon className="text-[#A88B5C]/30" size={48} />
+                      <p className="text-xs text-[#5C5852] mt-2 ml-2">No image</p>
+                    </div>
+                  }
+                  onError={(e) => {
+                    console.error('Admin product image failed to load:', {
+                      productId: product.id,
+                      productName: product.name,
+                      imageSrc: product.image,
+                      images: product.images
+                    });
+                  }}
+                />
                 {product.featured && (
-                  <span className="px-2 py-1 text-xs bg-[#A88B5C] text-white rounded">Featured</span>
+                  <div className="absolute top-2 left-2 px-2 py-1 bg-[#A88B5C] text-white text-xs rounded">
+                    Featured
+                  </div>
                 )}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setEditingProduct(product);
-                    setFormData({
-                      name: product.name,
-                      category: product.category,
-                      price: product.price.toString(),
-                      description: "", // Description not in product data yet
-                      featured: product.featured || false
-                    });
-                    // For editing, use existing image URL (not a File object)
-                    setProductImages(product.images && product.images.length > 0 
-                      ? product.images.map((imgUrl, idx) => ({
+              <div className="p-4">
+                <div className="text-xs text-[#A88B5C] mb-1">{product.category}</div>
+                <h3 className="font-medium text-[#2D2A26] mb-2">{product.name}</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-lg font-bold text-[#A88B5C]">${product.price}</div>
+                  {product.featured && (
+                    <span className="px-2 py-1 text-xs bg-[#A88B5C] text-white rounded">Featured</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingProduct(product);
+                      setFormData({
+                        name: product.name,
+                        category: product.category,
+                        price: product.price.toString(),
+                        description: "", // Description not in product data yet
+                        featured: product.featured || false
+                      });
+                      // For editing, use existing image URL (not a File object)
+                      setProductImages(product.images && product.images.length > 0
+                        ? product.images.map((imgUrl, idx) => ({
                           file: new File([], `existing-image-${idx}.jpg`),
                           preview: imgUrl,
                           error: false
                         }))
-                      : [{
+                        : [{
                           file: new File([], "existing-image.jpg"),
                           preview: product.image,
                           error: false
                         }]
-                    );
-                  }}
-                  className="flex-1 px-3 py-2 border border-[#A88B5C] text-[#A88B5C] rounded hover:bg-[#A88B5C] hover:text-white transition-colors text-sm flex items-center justify-center gap-1"
-                >
-                  <Edit size={14} />
-                  Edit
-                </button>
-                <button
-                  onClick={async () => {
-                    if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
-                      try {
-                        await productsAPI.delete(product.id);
-                        // Refresh products list
-                        const data = await productsAPI.getAll();
-                        setProducts(data);
-                        alert("Product deleted successfully!");
-                      } catch (error: any) {
-                        console.error("Failed to delete product:", error);
-                        const errorMessage = error?.message || error?.error || "Failed to delete product. Please try again.";
-                        alert(errorMessage);
+                      );
+                    }}
+                    className="flex-1 px-3 py-2 border border-[#A88B5C] text-[#A88B5C] rounded hover:bg-[#A88B5C] hover:text-white transition-colors text-sm flex items-center justify-center gap-1"
+                  >
+                    <Edit size={14} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+                        try {
+                          await productsAPI.delete(product.id);
+                          // Refresh products list
+                          const data = await productsAPI.getAll();
+                          setProducts(data);
+                          alert("Product deleted successfully!");
+                        } catch (error: any) {
+                          console.error("Failed to delete product:", error);
+                          const errorMessage = error?.message || error?.error || "Failed to delete product. Please try again.";
+                          alert(errorMessage);
+                        }
                       }
-                    }
-                  }}
-                  className="px-3 py-2 border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
+                    }}
+                    className="px-3 py-2 border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
           ))}
         </div>
       )}
@@ -320,7 +320,7 @@ export function ProductsPage() {
               className="space-y-4"
               onSubmit={async (e) => {
                 e.preventDefault();
-                
+
                 // Check admin authentication
                 if (!isAuthenticated) {
                   alert("You must be logged in as admin to add products. Redirecting to login...");
@@ -372,7 +372,7 @@ export function ProductsPage() {
                   });
 
                   let images = await Promise.all(imagePromises);
-                  
+
                   // Filter out invalid images
                   images = images.filter((src) => {
                     const isValid = src && typeof src === 'string' && src.trim() !== '';
@@ -430,9 +430,9 @@ export function ProductsPage() {
                 } catch (error: any) {
                   console.error("Failed to save product:", error);
                   console.error("Full error object:", error);
-                  
+
                   let errorMessage = 'Unknown error occurred';
-                  
+
                   if (error?.message) {
                     errorMessage = error.message;
                   } else if (error?.error) {
@@ -440,7 +440,7 @@ export function ProductsPage() {
                   } else if (typeof error === 'string') {
                     errorMessage = error;
                   }
-                  
+
                   // Check for specific error types
                   if (errorMessage.includes('401') || errorMessage.includes('Access token')) {
                     errorMessage = 'Authentication failed. Please log in again as admin.';
@@ -453,7 +453,7 @@ export function ProductsPage() {
                   } else if (errorMessage.includes('Invalid price')) {
                     errorMessage = 'Please enter a valid price (must be a positive number).';
                   }
-                  
+
                   console.error("Error details:", {
                     message: errorMessage,
                     originalError: error,
@@ -461,7 +461,7 @@ export function ProductsPage() {
                     response: error?.response,
                     code: error?.code
                   });
-                  
+
                   alert(`Failed to save product: ${errorMessage}\n\nPlease check the browser console (F12) for more details.`);
                 }
               }}
@@ -471,7 +471,7 @@ export function ProductsPage() {
                 <label className="block text-sm text-[#2D2A26] mb-2">
                   Product Images ({productImages.length}/{maxImages})
                 </label>
-                
+
                 {/* Image URL Input */}
                 <div className="mb-4 p-3 bg-[#FFF8E7]/30 rounded-lg border border-[#A88B5C]/20">
                   <label className="block text-sm font-medium text-[#2D2A26] mb-2">
@@ -493,8 +493,8 @@ export function ProductsPage() {
                           .map(url => url.trim())
                           .filter(url => {
                             const isValid = url && (
-                              url.startsWith('http://') || 
-                              url.startsWith('https://') || 
+                              url.startsWith('http://') ||
+                              url.startsWith('https://') ||
                               url.startsWith('/') ||
                               url.startsWith('data:image/')
                             );
@@ -503,26 +503,26 @@ export function ProductsPage() {
                             }
                             return isValid;
                           });
-                        
+
                         if (urls.length === 0) {
                           alert('Please enter valid image URLs (one per line).\n\nURLs should start with:\n- http:// or https://\n- / (for local paths)\n- data:image/ (for base64)');
                           return;
                         }
-                        
+
                         const remainingSlots = maxImages - productImages.length;
                         if (urls.length > remainingSlots) {
                           alert(`You can only add ${remainingSlots} more image(s). You entered ${urls.length}.`);
                           return;
                         }
-                        
+
                         const newImages = urls
                           .slice(0, remainingSlots)
-                          .map(url => ({ 
-                            preview: url, 
-                            error: false, 
+                          .map(url => ({
+                            preview: url,
+                            error: false,
                             loading: false // Start as false, will show loading if needed
                           }));
-                        
+
                         setProductImages(prev => {
                           const updated = [...prev, ...newImages];
                           console.log('Updated product images:', updated);
