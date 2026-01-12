@@ -27,11 +27,27 @@ export default async function handler(req, res) {
         orderBy: { createdAt: 'desc' }
       });
       
-      return res.json(products.map(p => ({
-        ...p,
-        price: parseFloat(p.price.toString()),
-        images: p.images.length > 0 ? p.images : [p.image]
-      })));
+      const productsWithImages = products.map(p => {
+        // Ensure image field is always set
+        const mainImage = p.image || (p.images && p.images.length > 0 ? p.images[0] : '/images/default-product.jpg');
+        const imagesArray = p.images && p.images.length > 0 ? p.images : [mainImage];
+        
+        console.log(`Product ${p.id} (${p.name}):`, {
+          image: mainImage,
+          imagesCount: imagesArray.length,
+          hasImage: !!mainImage && mainImage !== '/images/default-product.jpg'
+        });
+        
+        return {
+          ...p,
+          image: mainImage,  // Ensure image field is always present
+          images: imagesArray,
+          price: parseFloat(p.price.toString())
+        };
+      });
+      
+      console.log(`Returning ${productsWithImages.length} products with images`);
+      return res.json(productsWithImages);
     }
 
     // POST, PUT, DELETE require authentication
@@ -48,17 +64,63 @@ export default async function handler(req, res) {
     if (method === 'POST') {
       const { name, category, price, description, featured, images } = req.body;
       
+      // Validate required fields
+      if (!name || !category || price === undefined || price === null) {
+        return res.status(400).json({ 
+          error: 'Missing required fields', 
+          message: 'Name, category, and price are required' 
+        });
+      }
+
+      // Validate price
+      const priceValue = parseFloat(price);
+      if (isNaN(priceValue) || priceValue <= 0) {
+        return res.status(400).json({ 
+          error: 'Invalid price', 
+          message: 'Price must be a positive number' 
+        });
+      }
+
+      // Ensure images array exists and has at least one image
+      let imageArray = [];
+      if (images && Array.isArray(images) && images.length > 0) {
+        imageArray = images
+          .filter(img => img && typeof img === 'string' && img.trim() !== '')
+          .map(img => img.trim());
+      }
+      
+      // If no images provided, use default
+      if (imageArray.length === 0) {
+        imageArray = ['/images/default-product.jpg'];
+      }
+
+      // Ensure we have a valid main image
+      const mainImage = imageArray[0] || '/images/default-product.jpg';
+      
+      console.log('Creating product with images:', {
+        imageCount: imageArray.length,
+        mainImage: mainImage.substring(0, 50) + (mainImage.length > 50 ? '...' : ''),
+        allImages: imageArray.map(img => img.substring(0, 30) + '...')
+      });
+
       const product = await prisma.product.create({
         data: {
-          name,
-          category,
-          price: parseFloat(price),
-          image: images?.[0] || '/images/default-product.jpg',
-          images: images && images.length > 0 ? images : [images?.[0] || '/images/default-product.jpg'],
+          name: name.trim(),
+          category: category.trim(),
+          price: priceValue,
+          image: mainImage,  // Ensure main image is set
+          images: imageArray, // All images array
           rating: 5,
-          featured: featured === 'true' || featured === true,
-          description: description || ''
+          featured: featured === true || featured === 'true',
+          description: description ? description.trim() : ''
         }
+      });
+      
+      console.log('Product created successfully:', {
+        id: product.id,
+        name: product.name,
+        image: product.image,
+        imagesCount: product.images.length
       });
       
       return res.status(201).json({
@@ -74,11 +136,24 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Products API error:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Product not found' });
     }
     
-    res.status(500).json({ error: 'Request failed', message: error.message });
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'Duplicate entry', message: 'A product with this name already exists' });
+    }
+    
+    // Return detailed error for debugging
+    res.status(500).json({ 
+      error: 'Request failed', 
+      message: error.message,
+      code: error.code,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 }

@@ -44,35 +44,29 @@ export default async function handler(req, res) {
       })));
     }
 
-    // GET single customer
-    if (method === 'GET' && req.query.id) {
-      const customer = await prisma.customer.findUnique({
-        where: { id: parseInt(req.query.id) }
-      });
-
-      if (!customer) {
-        return res.status(404).json({ error: 'Customer not found' });
-      }
-
-      return res.json({
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone || '',
-        address: customer.address || {},
-        createdAt: customer.createdAt,
-        updatedAt: customer.updatedAt
-      });
-    }
-
     // POST create customer
     if (method === 'POST') {
       const { name, email, phone, address } = req.body;
 
+      if (!name || !email) {
+        return res.status(400).json({ error: 'Name and email are required' });
+      }
+
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // Check if customer already exists
+      const existingCustomer = await prisma.customer.findUnique({
+        where: { email: normalizedEmail }
+      });
+
+      if (existingCustomer) {
+        return res.status(400).json({ error: 'Customer with this email already exists' });
+      }
+
       const customer = await prisma.customer.create({
         data: {
           name,
-          email,
+          email: normalizedEmail,
           phone: phone || null,
           address: address || {}
         }
@@ -82,43 +76,11 @@ export default async function handler(req, res) {
         id: customer.id,
         name: customer.name,
         email: customer.email,
-        phone: customer.phone,
-        address: customer.address
+        phone: customer.phone || '',
+        address: customer.address || {},
+        createdAt: customer.createdAt,
+        updatedAt: customer.updatedAt
       });
-    }
-
-    // PUT update customer
-    if (method === 'PUT') {
-      const { id, name, email, phone, address } = req.body;
-
-      const customer = await prisma.customer.update({
-        where: { id: parseInt(id) },
-        data: {
-          name: name || undefined,
-          email: email || undefined,
-          phone: phone !== undefined ? phone : undefined,
-          address: address || undefined
-        }
-      });
-
-      return res.json({
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        address: customer.address
-      });
-    }
-
-    // DELETE customer
-    if (method === 'DELETE') {
-      const { id } = req.query;
-
-      await prisma.customer.delete({
-        where: { id: parseInt(id) }
-      });
-
-      return res.json({ message: 'Customer deleted successfully' });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

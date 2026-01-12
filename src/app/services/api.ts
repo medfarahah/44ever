@@ -37,18 +37,37 @@ async function apiRequest<T>(
 
   const url = `${API_BASE_URL}${endpoint}`;
   console.log(`[API] ${options.method || 'GET'} ${url}`);
+  if (token) {
+    console.log(`[API] Token present: ${token.substring(0, 20)}...`);
+  } else {
+    console.warn(`[API] No token found for ${options.method || 'GET'} ${url}`);
+  }
 
   try {
     const response = await fetch(url, {
       ...options,
       headers,
     });
+    
+    console.log(`[API] Response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ 
-        error: `Request failed with status ${response.status}` 
-      }));
-      console.error('[API Error]', error);
+      const error = await response.json().catch(async () => {
+        // If JSON parsing fails, try to get text
+        const text = await response.text().catch(() => 'Unknown error');
+        return { 
+          error: `Request failed with status ${response.status}`,
+          message: text
+        };
+      });
+      console.error('[API Error]', {
+        status: response.status,
+        statusText: response.statusText,
+        error: error.error,
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
       throw new Error(error.error || error.message || `HTTP error! status: ${response.status}`);
     }
 
@@ -110,6 +129,10 @@ export const ordersAPI = {
   update: (id: number, orderData: any) => apiRequest<any>(`/orders/${id}`, {
     method: 'PUT',
     body: JSON.stringify(orderData),
+  }),
+  updateStatus: (id: number, status: string, notes?: string) => apiRequest<any>(`/orders/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ status, notes }),
   }),
   delete: (id: number) => apiRequest<{ message: string }>(`/orders/${id}`, { method: 'DELETE' }),
 };

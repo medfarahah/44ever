@@ -20,6 +20,16 @@ export function Products() {
     const fetchProducts = async () => {
       try {
         const data = await productsAPI.getAll();
+        console.log('Products fetched:', data.length, 'products');
+        data.forEach((product, idx) => {
+          console.log(`Product ${idx + 1}:`, {
+            id: product.id,
+            name: product.name,
+            image: product.image?.substring(0, 50) + '...',
+            hasImage: !!product.image,
+            images: product.images?.length || 0
+          });
+        });
         setProducts(data);
       } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -71,9 +81,17 @@ export function Products() {
                 <div className="relative overflow-hidden">
                   <div className="aspect-square relative">
                     <ImageWithFallback
-                      src={product.image}
+                      src={product.image || product.images?.[0] || '/images/default-product.jpg'}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      onError={(e) => {
+                        console.error('Product image failed to load:', {
+                          productId: product.id,
+                          productName: product.name,
+                          imageSrc: product.image,
+                          images: product.images
+                        });
+                      }}
                     />
                     {product.featured && (
                       <div className="absolute top-4 left-4 bg-[#A88B5C] text-white px-3 py-1 text-[10px] sm:text-xs tracking-wider">

@@ -42,10 +42,15 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: 'Product not found' });
       }
       
+      // Ensure image field is always set
+      const mainImage = product.image || (product.images && product.images.length > 0 ? product.images[0] : '/images/default-product.jpg');
+      const imagesArray = product.images && product.images.length > 0 ? product.images : [mainImage];
+      
       return res.json({
         ...product,
-        price: parseFloat(product.price.toString()),
-        images: product.images.length > 0 ? product.images : [product.image]
+        image: mainImage,  // Ensure image field is always present
+        images: imagesArray,
+        price: parseFloat(product.price.toString())
       });
     }
 
@@ -77,9 +82,19 @@ export default async function handler(req, res) {
       if (price) updateData.price = parseFloat(price);
       if (description !== undefined) updateData.description = description;
       if (featured !== undefined) updateData.featured = featured === 'true' || featured === true;
-      if (images && images.length > 0) {
-        updateData.image = images[0];
-        updateData.images = images;
+      if (images && Array.isArray(images) && images.length > 0) {
+        const validImages = images
+          .filter(img => img && typeof img === 'string' && img.trim() !== '')
+          .map(img => img.trim());
+        
+        if (validImages.length > 0) {
+          updateData.image = validImages[0];
+          updateData.images = validImages;
+          console.log('Updating product images:', {
+            imageCount: validImages.length,
+            mainImage: validImages[0].substring(0, 50) + '...'
+          });
+        }
       }
       
       const product = await prisma.product.update({
@@ -87,10 +102,15 @@ export default async function handler(req, res) {
         data: updateData
       });
       
+      // Ensure image field is always set
+      const mainImage = product.image || (product.images && product.images.length > 0 ? product.images[0] : '/images/default-product.jpg');
+      const imagesArray = product.images && product.images.length > 0 ? product.images : [mainImage];
+      
       return res.json({
         ...product,
-        price: parseFloat(product.price.toString()),
-        images: product.images.length > 0 ? product.images : [product.image]
+        image: mainImage,  // Ensure image field is always present
+        images: imagesArray,
+        price: parseFloat(product.price.toString())
       });
     }
 

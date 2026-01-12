@@ -1,13 +1,16 @@
 import { motion } from "motion/react";
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Search, Plus, Edit, Trash2, Image as ImageIcon, Upload, X } from "lucide-react";
 import { productsAPI } from "../../services/api";
 import { ImageWithFallback } from "../../components/figma/ImageWithFallback";
 import { Product } from "../../data/products";
+import { useAdminAuth } from "../../context/AdminAuthContext";
 
 export function ProductsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAdminAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -31,6 +34,17 @@ export function ProductsPage() {
     const fetchProducts = async () => {
       try {
         const data = await productsAPI.getAll();
+        console.log('Admin: Products fetched:', data.length, 'products');
+        data.forEach((product, idx) => {
+          console.log(`Admin Product ${idx + 1}:`, {
+            id: product.id,
+            name: product.name,
+            image: product.image?.substring(0, 50) + '...',
+            hasImage: !!product.image,
+            imagesCount: product.images?.length || 0,
+            images: product.images?.map(img => img.substring(0, 30) + '...') || []
+          });
+        });
         setProducts(data);
       } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -48,65 +62,91 @@ export function ProductsPage() {
     }
   }, [location.pathname]);
 
+  // Cleanup blob URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      productImages.forEach(img => {
+        if (img.preview && img.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(img.preview);
+        }
+      });
+    };
+  }, []); // Only run on unmount
+
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    const input = e.target;
+    const files = input.files;
+
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const fileArray = Array.from(files);
     const remainingSlots = maxImages - productImages.length;
-    const filesToAdd = files.slice(0, remainingSlots);
+    const filesToAdd = fileArray.slice(0, remainingSlots);
 
     // Validate file types and sizes
-    const validFiles = filesToAdd.filter(file => {
+    const validFiles: File[] = [];
+    for (const file of filesToAdd) {
       const isValidType = file.type.startsWith('image/');
       const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+      
       if (!isValidType) {
         alert(`${file.name} is not a valid image file.`);
+        continue;
       }
       if (!isValidSize) {
         alert(`${file.name} is too large. Maximum size is 10MB.`);
+        continue;
       }
-      return isValidType && isValidSize;
+      validFiles.push(file);
+    }
+
+    // Create preview URLs immediately using URL.createObjectURL
+    const newImages = validFiles.map(file => {
+      const preview = URL.createObjectURL(file);
+      return {
+        file,
+        preview,
+        error: false
+      };
     });
 
-    validFiles.forEach((file) => {
-      const reader = new FileReader();
-
-      reader.onerror = () => {
-        alert(`Failed to load image: ${file.name}`);
-        setProductImages((prev) => [
-          ...prev,
-          { file, preview: "", error: true },
-        ]);
-      };
-
-      reader.onload = (e) => {
-        const result = e.target?.result;
-        if (result) {
-          setProductImages((prev) => {
-            // Check if this file is already in the list
-            if (prev.some(img => img.file === file)) {
-              return prev;
-            }
-            return [
-              ...prev,
-              { file, preview: result as string, error: false },
-            ];
-          });
-        }
-      };
-
-      reader.readAsDataURL(file);
+    // Add new images to state
+    setProductImages(prev => {
+      // Filter out duplicates by file name
+      const existingNames = new Set(prev.map(img => img.file.name));
+      const uniqueNewImages = newImages.filter(img => !existingNames.has(img.file.name));
+      return [...prev, ...uniqueNewImages];
     });
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    // Reset input to allow selecting the same file again
+    if (input) {
+      input.value = '';
     }
   };
 
   const handleRemoveImage = (index: number) => {
-    setProductImages((prev) => prev.filter((_, i) => i !== index));
+    setProductImages((prev) => {
+      const imageToRemove = prev[index];
+      // Clean up object URL to prevent memory leaks
+      if (imageToRemove && imageToRemove.preview && imageToRemove.preview.startsWith('blob:')) {
+        URL.revokeObjectURL(imageToRemove.preview);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleClearAllImages = () => {
-    setProductImages([]);
+    setProductImages((prev) => {
+      // Clean up all object URLs to prevent memory leaks
+      prev.forEach(img => {
+        if (img.preview && img.preview.startsWith('blob:')) {
+          URL.revokeObjectURL(img.preview);
+        }
+      });
+      return [];
+    });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -162,14 +202,23 @@ export function ProductsPage() {
           >
             <div className="aspect-square bg-[#F5F5F5] overflow-hidden relative">
               <ImageWithFallback
-                src={product.image}
+                src={product.image || product.images?.[0] || '/images/default-product.jpg'}
                 alt={product.name}
                 className="w-full h-full object-cover"
                 fallback={
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-[#F5F5F5]">
                     <ImageIcon className="text-[#A88B5C]/30" size={48} />
+                    <p className="text-xs text-[#5C5852] mt-2 ml-2">No image</p>
                   </div>
                 }
+                onError={(e) => {
+                  console.error('Admin product image failed to load:', {
+                    productId: product.id,
+                    productName: product.name,
+                    imageSrc: product.image,
+                    images: product.images
+                  });
+                }}
               />
               {product.featured && (
                 <div className="absolute top-2 left-2 px-2 py-1 bg-[#A88B5C] text-white text-xs rounded">
@@ -197,11 +246,19 @@ export function ProductsPage() {
                       description: "", // Description not in product data yet
                       featured: product.featured || false
                     });
-                    setProductImages([{
-                      file: new File([], "existing-image.jpg"),
-                      preview: product.image,
-                      error: false
-                    }]);
+                    // For editing, use existing image URL (not a File object)
+                    setProductImages(product.images && product.images.length > 0 
+                      ? product.images.map((imgUrl, idx) => ({
+                          file: new File([], `existing-image-${idx}.jpg`),
+                          preview: imgUrl,
+                          error: false
+                        }))
+                      : [{
+                          file: new File([], "existing-image.jpg"),
+                          preview: product.image,
+                          error: false
+                        }]
+                    );
                   }}
                   className="flex-1 px-3 py-2 border border-[#A88B5C] text-[#A88B5C] rounded hover:bg-[#A88B5C] hover:text-white transition-colors text-sm flex items-center justify-center gap-1"
                 >
@@ -263,28 +320,96 @@ export function ProductsPage() {
               className="space-y-4"
               onSubmit={async (e) => {
                 e.preventDefault();
+                
+                // Check admin authentication
+                if (!isAuthenticated) {
+                  alert("You must be logged in as admin to add products. Redirecting to login...");
+                  navigate("/admin/login");
+                  return;
+                }
+
+                // Check if admin token exists
+                const adminToken = localStorage.getItem('adminToken');
+                if (!adminToken) {
+                  alert("Admin session expired. Please log in again.");
+                  navigate("/admin/login");
+                  return;
+                }
+
                 try {
-                  // Build images array from previews (base64 or URLs)
-                  const images = productImages
-                    .map((img) => img.preview)
-                    .filter((src) => !!src);
+                  // Validate required fields
+                  if (!formData.name || !formData.category || !formData.price) {
+                    alert("Please fill in all required fields (Name, Category, Price)");
+                    return;
+                  }
+
+                  // Validate price
+                  const priceValue = parseFloat(formData.price);
+                  if (isNaN(priceValue) || priceValue <= 0) {
+                    alert("Please enter a valid price (greater than 0)");
+                    return;
+                  }
+
+                  // Convert images to base64 for submission
+                  // If preview is a blob URL, convert the File to base64
+                  // If preview is already a URL or base64, use it directly
+                  const convertImageToBase64 = (file: File): Promise<string> => {
+                    return new Promise((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onload = () => resolve(reader.result as string);
+                      reader.onerror = reject;
+                      reader.readAsDataURL(file);
+                    });
+                  };
+
+                  const imagePromises = productImages.map(async (img) => {
+                    // If preview is a blob URL and we have a File, convert to base64
+                    if (img.preview.startsWith('blob:') && img.file) {
+                      return await convertImageToBase64(img.file);
+                    }
+                    // Otherwise use the preview as-is (URL or existing base64)
+                    return img.preview;
+                  });
+
+                  let images = await Promise.all(imagePromises);
+                  
+                  // Filter out invalid images
+                  images = images.filter((src) => {
+                    const isValid = src && typeof src === 'string' && src.trim() !== '';
+                    if (!isValid) {
+                      console.warn('Filtered out invalid image source');
+                    }
+                    return isValid;
+                  });
+
+                  // Ensure at least one image
+                  if (images.length === 0) {
+                    alert("Please add at least one product image. Click 'Upload Images' to add images.");
+                    return;
+                  }
+
+                  console.log('Final images array to send:', images);
 
                   const payload = {
-                    name: formData.name,
-                    category: formData.category,
-                    price: parseFloat(formData.price),
-                    description: formData.description,
-                    featured: formData.featured,
-                    images,
+                    name: formData.name.trim(),
+                    category: formData.category.trim(),
+                    price: priceValue,
+                    description: formData.description?.trim() || '',
+                    featured: formData.featured || false,
+                    images: images.length > 0 ? images : ['/images/default-product.jpg'],
                   };
+
+                  console.log('Creating product with payload:', { ...payload, images: images.length });
 
                   if (editingProduct) {
                     // Update existing product
-                    await productsAPI.update(editingProduct.id, payload);
+                    const result = await productsAPI.update(editingProduct.id, payload);
+                    console.log('Product updated:', result);
                     alert("Product updated successfully!");
                   } else {
                     // Create new product
-                    await productsAPI.create(payload);
+                    const result = await productsAPI.create(payload);
+                    console.log('Product created:', result);
                     alert("Product added successfully!");
                   }
 
@@ -304,11 +429,40 @@ export function ProductsPage() {
                   });
                 } catch (error: any) {
                   console.error("Failed to save product:", error);
-                  alert(
-                    error?.message ||
-                      error?.error ||
-                      "Failed to save product. Please try again."
-                  );
+                  console.error("Full error object:", error);
+                  
+                  let errorMessage = 'Unknown error occurred';
+                  
+                  if (error?.message) {
+                    errorMessage = error.message;
+                  } else if (error?.error) {
+                    errorMessage = error.error;
+                  } else if (typeof error === 'string') {
+                    errorMessage = error;
+                  }
+                  
+                  // Check for specific error types
+                  if (errorMessage.includes('401') || errorMessage.includes('Access token')) {
+                    errorMessage = 'Authentication failed. Please log in again as admin.';
+                  } else if (errorMessage.includes('403') || errorMessage.includes('Admin access')) {
+                    errorMessage = 'Admin access required. Please log in as admin.';
+                  } else if (errorMessage.includes('Cannot connect')) {
+                    errorMessage = 'Cannot connect to server. Please check if the backend is running.';
+                  } else if (errorMessage.includes('Missing required')) {
+                    errorMessage = 'Please fill in all required fields (Name, Category, Price).';
+                  } else if (errorMessage.includes('Invalid price')) {
+                    errorMessage = 'Please enter a valid price (must be a positive number).';
+                  }
+                  
+                  console.error("Error details:", {
+                    message: errorMessage,
+                    originalError: error,
+                    stack: error?.stack,
+                    response: error?.response,
+                    code: error?.code
+                  });
+                  
+                  alert(`Failed to save product: ${errorMessage}\n\nPlease check the browser console (F12) for more details.`);
                 }
               }}
             >
@@ -317,6 +471,75 @@ export function ProductsPage() {
                 <label className="block text-sm text-[#2D2A26] mb-2">
                   Product Images ({productImages.length}/{maxImages})
                 </label>
+                
+                {/* Image URL Input */}
+                <div className="mb-4 p-3 bg-[#FFF8E7]/30 rounded-lg border border-[#A88B5C]/20">
+                  <label className="block text-sm font-medium text-[#2D2A26] mb-2">
+                    📎 Add Images by URL
+                  </label>
+                  <div className="flex gap-2">
+                    <textarea
+                      id="image-url-input"
+                      placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
+                      rows={3}
+                      className="flex-1 px-3 py-2 border border-[#A88B5C]/30 rounded-lg focus:outline-none focus:border-[#A88B5C] text-sm resize-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const textarea = document.getElementById('image-url-input') as HTMLTextAreaElement;
+                        const urls = textarea.value
+                          .split('\n')
+                          .map(url => url.trim())
+                          .filter(url => {
+                            const isValid = url && (
+                              url.startsWith('http://') || 
+                              url.startsWith('https://') || 
+                              url.startsWith('/') ||
+                              url.startsWith('data:image/')
+                            );
+                            if (!isValid && url) {
+                              console.warn('Invalid URL format:', url);
+                            }
+                            return isValid;
+                          });
+                        
+                        if (urls.length === 0) {
+                          alert('Please enter valid image URLs (one per line).\n\nURLs should start with:\n- http:// or https://\n- / (for local paths)\n- data:image/ (for base64)');
+                          return;
+                        }
+                        
+                        const remainingSlots = maxImages - productImages.length;
+                        if (urls.length > remainingSlots) {
+                          alert(`You can only add ${remainingSlots} more image(s). You entered ${urls.length}.`);
+                          return;
+                        }
+                        
+                        const newImages = urls
+                          .slice(0, remainingSlots)
+                          .map(url => ({ 
+                            preview: url, 
+                            error: false, 
+                            loading: false // Start as false, will show loading if needed
+                          }));
+                        
+                        setProductImages(prev => {
+                          const updated = [...prev, ...newImages];
+                          console.log('Updated product images:', updated);
+                          return updated;
+                        });
+                        textarea.value = '';
+                        console.log(`Added ${newImages.length} image(s) from URLs:`, newImages);
+                      }}
+                      className="px-4 py-2 bg-[#A88B5C] text-white rounded-lg hover:bg-[#8B6F47] transition-colors text-sm font-medium whitespace-nowrap"
+                    >
+                      Add URLs
+                    </button>
+                  </div>
+                  <p className="text-xs text-[#5C5852] mt-2">
+                    💡 Paste image URLs (one per line) or upload files below. Supports http://, https://, / (local), or data:image/ (base64)
+                  </p>
+                </div>
 
                 {/* Image Grid */}
                 {productImages.length > 0 && (
@@ -324,14 +547,14 @@ export function ProductsPage() {
                     {productImages.map((image, index) => (
                       <div key={index} className="relative group">
                         <div className="w-full aspect-square rounded-lg overflow-hidden border border-[#A88B5C]/20 bg-[#F5F5F5]">
-                          {image.error || !image.preview ? (
+                          {image.error ? (
                             <div className="w-full h-full flex flex-col items-center justify-center text-[#5C5852] p-2">
                               <ImageIcon size={24} className="mb-2" />
-                              <p className="text-xs text-center">
-                                {image.error ? "Failed to load" : "Loading..."}
+                              <p className="text-xs text-center text-red-600">
+                                Failed to load
                               </p>
                             </div>
-                          ) : (
+                          ) : image.preview ? (
                             <img
                               src={image.preview}
                               alt={`Product preview ${index + 1}`}
@@ -344,7 +567,7 @@ export function ProductsPage() {
                                 );
                               }}
                             />
-                          )}
+                          ) : null}
                         </div>
                         <button
                           type="button"
@@ -357,9 +580,16 @@ export function ProductsPage() {
                         <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/70 text-white text-xs rounded font-medium">
                           {index === 0 ? "Main" : `#${index + 1}`}
                         </div>
-                        <p className="text-xs text-[#5C5852] mt-1 truncate px-1" title={image.file.name}>
-                          {image.file.name}
-                        </p>
+                        {image.file && (
+                          <p className="text-xs text-[#5C5852] mt-1 truncate px-1" title={image.file.name}>
+                            {image.file.name}
+                          </p>
+                        )}
+                        {!image.file && image.preview && (
+                          <p className="text-xs text-[#5C5852] mt-1 truncate px-1" title={image.preview}>
+                            {image.preview.startsWith('data:') ? 'Base64 Image' : image.preview.length > 30 ? image.preview.substring(0, 30) + '...' : image.preview}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
