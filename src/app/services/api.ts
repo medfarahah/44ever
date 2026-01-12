@@ -66,49 +66,37 @@ async function apiRequest<T>(
 export const productsAPI = {
   getAll: () => apiRequest<any[]>('/products'),
   getById: (id: number) => apiRequest<any>(`/products/${id}`),
-  create: (productData: FormData) => {
-    const token = getAuthToken();
-    return fetch(`${API_BASE_URL}/products`, {
-      method: 'POST',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      body: productData,
-    }).then(res => {
-      if (!res.ok) throw new Error('Failed to create product');
-      return res.json();
-    });
-  },
-  update: (id: number, productData: FormData) => {
-    const token = getAuthToken();
-    return fetch(`${API_BASE_URL}/products/${id}`, {
-      method: 'PUT',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      body: productData,
-    }).then(res => {
-      if (!res.ok) throw new Error('Failed to update product');
-      return res.json();
-    });
-  },
-  delete: async (id: number) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`
-        }
-      });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: `Request failed with status ${response.status}` }));
-        throw new Error(error.error || error.message || `Failed to delete product (${response.status})`);
-      }
+  // Create product (JSON body, images as URLs/base64 strings)
+  create: (productData: {
+    name: string;
+    category: string;
+    price: number | string;
+    description?: string;
+    featured?: boolean;
+    images?: string[];
+  }) => apiRequest<any>('/products', {
+    method: 'POST',
+    body: JSON.stringify(productData),
+  }),
 
-      return await response.json();
-    } catch (error) {
-      console.error('[Products API] Delete error:', error);
-      throw error;
-    }
-  },
+  // Update product (JSON body)
+  update: (id: number, productData: {
+    name?: string;
+    category?: string;
+    price?: number | string;
+    description?: string;
+    featured?: boolean;
+    images?: string[];
+  }) => apiRequest<any>(`/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(productData),
+  }),
+
+  // Delete product
+  delete: (id: number) => apiRequest<{ message: string }>(`/products/${id}`, {
+    method: 'DELETE',
+  }),
 };
 
 // Orders API

@@ -264,46 +264,51 @@ export function ProductsPage() {
               onSubmit={async (e) => {
                 e.preventDefault();
                 try {
-                  const formDataToSend = new FormData();
-                  formDataToSend.append('name', formData.name);
-                  formDataToSend.append('category', formData.category);
-                  formDataToSend.append('price', formData.price);
-                  formDataToSend.append('description', formData.description);
-                  formDataToSend.append('featured', formData.featured.toString());
-                  
-                  // Add images
-                  productImages.forEach((img) => {
-                    if (img.file && img.file.size > 0) {
-                      formDataToSend.append('images', img.file);
-                    }
-                  });
+                  // Build images array from previews (base64 or URLs)
+                  const images = productImages
+                    .map((img) => img.preview)
+                    .filter((src) => !!src);
+
+                  const payload = {
+                    name: formData.name,
+                    category: formData.category,
+                    price: parseFloat(formData.price),
+                    description: formData.description,
+                    featured: formData.featured,
+                    images,
+                  };
 
                   if (editingProduct) {
                     // Update existing product
-                    const existingImages = productImages
-                      .filter(img => !img.file || img.file.size === 0)
-                      .map(img => img.preview);
-                    formDataToSend.append('existingImages', JSON.stringify(existingImages));
-                    
-                    await productsAPI.update(editingProduct.id, formDataToSend);
+                    await productsAPI.update(editingProduct.id, payload);
                     alert("Product updated successfully!");
                   } else {
                     // Create new product
-                    await productsAPI.create(formDataToSend);
+                    await productsAPI.create(payload);
                     alert("Product added successfully!");
                   }
-                  
+
                   // Refresh products list
                   const data = await productsAPI.getAll();
                   setProducts(data);
-                  
+
                   setShowAddModal(false);
                   setEditingProduct(null);
                   handleClearAllImages();
-                  setFormData({ name: "", category: "", price: "", description: "", featured: false });
-                } catch (error) {
+                  setFormData({
+                    name: "",
+                    category: "",
+                    price: "",
+                    description: "",
+                    featured: false,
+                  });
+                } catch (error: any) {
                   console.error("Failed to save product:", error);
-                  alert("Failed to save product. Please try again.");
+                  alert(
+                    error?.message ||
+                      error?.error ||
+                      "Failed to save product. Please try again."
+                  );
                 }
               }}
             >
