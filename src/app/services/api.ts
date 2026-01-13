@@ -1,8 +1,6 @@
 // API Base URL - use relative paths for Vercel serverless functions
 // In development, use localhost backend; in production, use relative paths
-const API_BASE_URL = import.meta.env.DEV 
-  ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api')
-  : '/api'; // Relative path for Vercel serverless functions
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api');
 
 // Log API URL for debugging
 if (import.meta.env.DEV) {
@@ -48,14 +46,14 @@ async function apiRequest<T>(
       ...options,
       headers,
     });
-    
+
     console.log(`[API] Response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
       const error = await response.json().catch(async () => {
         // If JSON parsing fails, try to get text
         const text = await response.text().catch(() => 'Unknown error');
-        return { 
+        return {
           error: `Request failed with status ${response.status}`,
           message: text
         };
@@ -178,7 +176,7 @@ export const authAPI = {
     try {
       const url = `${API_BASE_URL}/auth/login`;
       console.log('[Auth] Login request to:', url);
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -201,7 +199,7 @@ export const authAPI = {
       throw error;
     }
   },
-  
+
   // User registration
   register: async (name: string, email: string, password: string, phone?: string) => {
     if (!API_BASE_URL) {
@@ -211,7 +209,7 @@ export const authAPI = {
     try {
       const url = `${API_BASE_URL}/auth/register`;
       console.log('[Auth] Register request to:', url);
-      
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -236,7 +234,7 @@ export const authAPI = {
       throw error;
     }
   },
-  
+
   // Admin login (supports both hardcoded admin and database admin users)
   adminLogin: async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -251,37 +249,37 @@ export const authAPI = {
     }
 
     const data = await response.json();
-    
+
     // Check if user is admin (either hardcoded admin or database admin)
     if (data.token && data.user?.role === 'admin') {
       localStorage.setItem('adminToken', data.token);
       localStorage.setItem('adminUser', JSON.stringify(data.user));
       return data;
     }
-    
+
     // If not admin, throw error
     throw new Error('Access denied. Admin privileges required.');
   },
-  
+
   logout: () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
   },
-  
+
   verify: () => apiRequest<{ valid: boolean }>('/auth/verify', {
     method: 'POST',
     body: JSON.stringify({ token: getAuthToken() }),
   }),
-  
+
   getCurrentUser: () => apiRequest<any>('/auth/me'),
-  
+
   updateProfile: (userData: any) => apiRequest<any>('/auth/me', {
     method: 'PUT',
     body: JSON.stringify(userData),
   }),
-  
+
   changePassword: (currentPassword: string, newPassword: string) => apiRequest<{ message: string }>('/auth/change-password', {
     method: 'POST',
     body: JSON.stringify({ currentPassword, newPassword }),
