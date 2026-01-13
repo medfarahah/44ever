@@ -13,10 +13,13 @@ export default defineConfig({
   server: {
     proxy: {
       '/uploads': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:5001',
         changeOrigin: true,
       },
     },
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
   },
   resolve: {
     alias: {
