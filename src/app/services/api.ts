@@ -1,6 +1,8 @@
 // API Base URL - use relative paths for Vercel serverless functions
 // In development, use localhost backend; in production, use relative paths
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5001/api' : '/api');
+const API_BASE_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL || 'http://localhost:5001/api')
+  : '/api'; // Relative path for Vercel serverless functions
 
 // Log API URL for debugging
 if (import.meta.env.DEV) {
