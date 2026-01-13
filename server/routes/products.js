@@ -11,16 +11,20 @@ const __dirname = path.dirname(__filename);
 const router = express.Router();
 
 // Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadsDir = path.join(__dirname, '../uploads/products');
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+const isProd = process.env.NODE_ENV === 'production';
+
+const storage = isProd
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadsDir = path.join(__dirname, '../uploads/products');
+      cb(null, uploadsDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
 
 const upload = multer({
   storage: storage,
@@ -96,6 +100,12 @@ const saveBase64Image = (base64String) => {
   try {
     if (!base64String || !base64String.startsWith('data:image')) return null;
 
+    // In production (Vercel), we store base64 directly as the filesystem is read-only
+    if (isProd) {
+      console.log('Production: Storing image as base64 in DB');
+      return base64String;
+    }
+
     const matches = base64String.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) return null;
 
@@ -121,7 +131,18 @@ router.post('/', authenticateToken, upload.array('images', 4), async (req, res) 
     let { images } = req.body;
 
     // Handle uploaded images (multipart/form-data)
-    let imagePaths = req.files ? req.files.map(file => `/uploads/products/${file.filename}`) : [];
+    let imagePaths = [];
+    if (req.files && req.files.length > 0) {
+      if (isProd) {
+        // In production, convert buffer to base64
+        imagePaths = req.files.map(file => {
+          const b64 = file.buffer.toString('base64');
+          return `data:${file.mimetype};base64,${b64}`;
+        });
+      } else {
+        imagePaths = req.files.map(file => `/uploads/products/${file.filename}`);
+      }
+    }
 
     // Handle images in body (JSON base64 or URLs)
     if (imagePaths.length === 0 && images) {
@@ -185,7 +206,18 @@ router.put('/:id', authenticateToken, upload.array('images', 4), async (req, res
     }
 
     // Handle uploaded images (multipart/form-data)
-    let newImagePaths = req.files ? req.files.map(file => `/uploads/products/${file.filename}`) : [];
+    let newImagePaths = [];
+    if (req.files && req.files.length > 0) {
+      if (isProd) {
+        // In production, convert buffer to base64
+        newImagePaths = req.files.map(file => {
+          const b64 = file.buffer.toString('base64');
+          return `data:${file.mimetype};base64,${b64}`;
+        });
+      } else {
+        newImagePaths = req.files.map(file => `/uploads/products/${file.filename}`);
+      }
+    }
 
     // Handle images in body (JSON base64 or URLs)
     if (newImagePaths.length === 0 && images) {
