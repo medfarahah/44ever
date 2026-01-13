@@ -78,6 +78,14 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Welcome to the 44ever API',
+    status: 'Running',
+    endpoints: ['/api/products', '/api/auth', '/api/health']
+  });
+});
+
 app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/franchise', franchiseRouter);
