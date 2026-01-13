@@ -5,10 +5,8 @@ const API_BASE_URL = import.meta.env.DEV
   : '/api'; // Relative path for Vercel serverless functions
 
 // Log API URL for debugging
-if (import.meta.env.DEV) {
-  console.log('🚀 [API] Base URL:', API_BASE_URL);
-  console.log('📋 [API] Environment:', import.meta.env.MODE);
-}
+console.log('🚀 [API] Base URL:', API_BASE_URL);
+console.log('📋 [API] Environment:', import.meta.env.MODE);
 
 // Helper function to get auth token (user or admin)
 function getAuthToken(): string | null {

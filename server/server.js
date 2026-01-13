@@ -9,6 +9,7 @@ import franchiseRouter from './routes/franchise.js';
 import customersRouter from './routes/customers.js';
 import authRouter from './routes/auth.js';
 import initializeDatabase from './database/init.js';
+import prisma from './database/connection.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,17 +66,37 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Initialize database (seed data)
-// Don't block server startup if database init fails
-initializeDatabase().catch(err => {
-  console.error('⚠️ Failed to initialize database:', err.message);
-  console.error('Server will continue, but database operations may fail.');
-});
+// Initialize database (seed data) - only in development
+// In production, we assume migrations/data push have been done
+if (process.env.NODE_ENV !== 'production') {
+  initializeDatabase().catch(err => {
+    console.error('⚠️ Failed to initialize database:', err.message);
+  });
+}
 
 // Routes
 app.use((req, res, next) => {
   console.log(`[Request] ${req.method} ${req.url} from ${req.headers.origin || 'unknown'}`);
   next();
+});
+
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const userCount = await prisma.user.count();
+    const productCount = await prisma.product.count();
+    res.json({
+      status: 'Database Connected',
+      userCount,
+      productCount,
+      env: process.env.NODE_ENV
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'Database Connection Failed',
+      error: err.message,
+      code: err.code
+    });
+  }
 });
 
 app.get('/api', (req, res) => {

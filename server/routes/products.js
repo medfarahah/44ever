@@ -38,11 +38,17 @@ const upload = multer({
   }
 });
 
-// Ensure uploads directory exists
+// Ensure uploads directory exists - only in development
 import fs from 'fs';
 const uploadsDir = path.join(__dirname, '../uploads/products');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+if (process.env.NODE_ENV !== 'production') {
+  if (!fs.existsSync(uploadsDir)) {
+    try {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    } catch (err) {
+      console.warn('⚠️ Could not create uploads directory:', err.message);
+    }
+  }
 }
 
 // GET all products

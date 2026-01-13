@@ -4,11 +4,11 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "npm run prisma:generate && npx vite build",
+    "build": "prisma generate --schema=server/prisma/schema.prisma && npx vite build",
     "dev": "npx vite",
     "dev:backend": "cd server && npm run dev",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\"",
-    "prisma:generate": "cd server && npx prisma generate --schema=prisma/schema.prisma"
+    "prisma:generate": "prisma generate --schema=server/prisma/schema.prisma"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

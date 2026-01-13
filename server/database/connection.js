@@ -26,8 +26,13 @@ if (connectionString && !connectionString.includes('YourPassword')) {
   console.log('✅ DATABASE_URL is set:', connectionString.substring(0, 30) + '...');
 }
 
-const adapter = new PrismaNeon({ connectionString });
-const prisma = global.prisma || new PrismaClient({ adapter });
+const adapter = (connectionString && !connectionString.includes('YourPassword'))
+  ? new PrismaNeon({ connectionString })
+  : null;
+
+const prisma = global.prisma || (adapter
+  ? new PrismaClient({ adapter })
+  : new PrismaClient());
 
 if (process.env.NODE_ENV === 'development') global.prisma = prisma;
 

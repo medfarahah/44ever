@@ -55,6 +55,10 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // POST create customer
 router.post('/', async (req, res) => {
   try {
+    const { name, email, phone, address } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if customer already exists
