@@ -65,6 +65,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Initialize database (seed data) - only in development
 // In production, we assume migrations/data push have been done

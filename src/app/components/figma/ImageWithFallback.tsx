@@ -5,9 +5,9 @@ const ERROR_IMG_SRC =
   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjgwMCIgdmlld0JveD0iMCAwIDgwMCA4MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iODAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik00MDAgMzAwQzQ1NS4yMjggMzAwIDUwMCAzNDQuNzcyIDUwMCA0MDBDNTAwIDQ1NS4yMjggNDU1LjIyOCA1MDAgNDAwIDUwMEMzNDQuNzcyIDUwMCAzMDAgNDU1LjIyOCAzMDAgNDAwQzMwMCAzNDQuNzcyIDM0NC43NzIgMzAwIDQwMCAzMDBaIiBmaWxsPSIjQTg4QjVDIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPHBhdGggZD0iTTM1MCAzNTBINTQ1TDUwMCA1NTBIMzAwTDM1MCAzNTBaIiBmaWxsPSIjQTg4QjVDIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8cmVjdCB4PSIzODAiIHk9IjM4MCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iNSIgc3Ryb2tlPSIjQTg4QjVDIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1vcGFjaXR5PSIwLjMiLz4KPHBhdGggZD0iTTQwMCAzNTBWNDUwTTM1MCA0MDBINDUwIiBzdHJva2U9IiNBOOTg5NUQiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLW9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4='
 
 // Backend URL should match the one in api.ts
-const BACKEND_URL = import.meta.env.DEV
-  ? (import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000')
-  : ''; // In production, we assume relative paths or configured proxy
+const BACKEND_URL = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace('/api', '')
+  : (import.meta.env.DEV ? 'http://localhost:5001' : '/api');
 
 interface ImageWithFallbackProps extends ImgHTMLAttributes<HTMLImageElement> {
   fallback?: ReactNode;
