@@ -125,16 +125,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
 export default app;
 
-// Handle server errors
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`❌ Port ${PORT} is already in use. Please use a different port.`);
-    process.exit(1);
-  } else {
-    console.error('❌ Server error:', error);
-    process.exit(1);
-  }
-});
 
 // Handle uncaught errors
 process.on('uncaughtException', (error) => {
