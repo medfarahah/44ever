@@ -287,3 +287,44 @@ export const authAPI = {
     body: JSON.stringify({ currentPassword, newPassword }),
   }),
 };
+
+// Settings API
+export const settingsAPI = {
+  get: () => apiRequest<{ storeName: string; email: string; phone: string }>('/settings'),
+  update: (settings: { storeName?: string; email?: string; phone?: string }) => apiRequest<{ storeName: string; email: string; phone: string }>('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  }),
+};
+
+// Gift Sets API
+export interface GiftSet {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  images: string[];
+  products: number[];
+  rating: number;
+  featured: boolean;
+  inStock: boolean;
+  stockCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const giftSetsAPI = {
+  getAll: () => apiRequest<GiftSet[]>('/giftsets'),
+  getById: (id: number) => apiRequest<GiftSet>(`/giftsets/${id}`),
+  create: (giftSetData: Partial<GiftSet>) => apiRequest<GiftSet>('/giftsets', {
+    method: 'POST',
+    body: JSON.stringify(giftSetData),
+  }),
+  update: (id: number, giftSetData: Partial<GiftSet>) => apiRequest<GiftSet>(`/giftsets/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(giftSetData),
+  }),
+  delete: (id: number) => apiRequest<{ message: string }>(`/giftsets/${id}`, { method: 'DELETE' }),
+};

@@ -2,8 +2,10 @@ import { motion } from "motion/react";
 import { Instagram, Facebook, Youtube, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useSettings } from "../context/SettingsContext";
 
 export function Footer() {
+  const { settings } = useSettings();
   const [email, setEmail] = useState("");
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
@@ -54,10 +56,24 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 md:gap-12 mb-12 sm:mb-16">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 mb-8 md:mb-0">
-            <div className="text-xl sm:text-2xl tracking-[0.2em] sm:tracking-[0.3em] mb-4 sm:mb-6 text-[#A88B5C]">FOREVER</div>
+            <div className="text-xl sm:text-2xl tracking-[0.2em] sm:tracking-[0.3em] mb-4 sm:mb-6 text-[#A88B5C]">{settings.storeName}</div>
             <p className="text-white/60 text-xs sm:text-sm leading-relaxed">
               Illuminating beauty through the harmony of nature and science.
             </p>
+            {settings.email && (
+              <p className="text-white/60 text-xs sm:text-sm mt-2">
+                <a href={`mailto:${settings.email}`} className="hover:text-[#A88B5C] transition-colors">
+                  {settings.email}
+                </a>
+              </p>
+            )}
+            {settings.phone && (
+              <p className="text-white/60 text-xs sm:text-sm">
+                <a href={`tel:${settings.phone}`} className="hover:text-[#A88B5C] transition-colors">
+                  {settings.phone}
+                </a>
+              </p>
+            )}
           </div>
 
           {/* Shop */}
@@ -67,7 +83,7 @@ export function Footer() {
               <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Elixir Collection</Link></li>
               <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Serums</Link></li>
               <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Moisturizers</Link></li>
-              <li><Link to="/products" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Gift Sets</Link></li>
+              <li><Link to="/gift-sets" className="hover:text-[#A88B5C] transition-colors touch-manipulation">Gift Sets</Link></li>
             </ul>
           </div>
 
@@ -97,7 +113,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-6 sm:pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
           <div className="text-xs sm:text-sm text-white/40 text-center md:text-left">
-            © 2026 Forever. All rights reserved.
+            © 2026 {settings.storeName}. All rights reserved.
           </div>
 
           {/* Social Links */}

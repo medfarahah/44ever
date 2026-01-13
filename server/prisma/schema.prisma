@@ -102,3 +102,35 @@ model FranchiseApplication {
   @@index([email])
   @@map("franchise_applications")
 }
+
+model Settings {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model GiftSet {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  price       Decimal   @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2) @map("original_price")
+  image       String    @db.Text
+  images      String[]  @default([])
+  products    Json      @default("[]") // Array of product IDs included in the set
+  rating      Int       @default(5)
+  featured    Boolean   @default(false)
+  inStock     Boolean   @default(true) @map("in_stock")
+  stockCount  Int?      @map("stock_count")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@index([featured])
+  @@index([inStock])
+  @@map("gift_sets")
+}

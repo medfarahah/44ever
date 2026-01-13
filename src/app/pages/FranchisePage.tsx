@@ -5,6 +5,7 @@ import { ArrowLeft, Building2, Users, TrendingUp, Award, Mail, Phone, MapPin } f
 import { Footer } from "../components/Footer";
 import { StartBusiness } from "../components/StartBusiness";
 import { franchiseAPI } from "../services/api";
+import { SEO } from "../components/SEO";
 
 const benefits = [
   {
@@ -70,7 +71,13 @@ export function FranchisePage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
+    <>
+      <SEO
+        title="Franchise Opportunity - Join FOREVER Luxury Skincare | Start Your Business"
+        description="Join FOREVER as a franchise partner. Start your luxury skincare business with an established brand. Discover franchise opportunities and investment details."
+        keywords="forever franchise, luxury skincare franchise, beauty business opportunity, franchise investment"
+      />
+      <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-gradient-to-r from-white via-[#FFF8E7]/90 to-white backdrop-blur-sm border-b border-[#A88B5C]/20 px-4 sm:px-6 md:px-12 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -396,6 +403,7 @@ export function FranchisePage() {
 
       <Footer />
     </div>
+    </>
   );
 }
 

@@ -5,11 +5,13 @@ import { useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 
 export function Hero() {
   const navigate = useNavigate();
   const { setIsOpen, getTotalItems } = useCart();
   const { isAuthenticated, user, logout } = useAuth();
+  const { settings } = useSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = (id: string) => {
@@ -32,9 +34,9 @@ export function Hero() {
             onClick={() => navigate("/")}
             className="text-lg sm:text-xl md:text-2xl tracking-[0.2em] sm:tracking-[0.3em] text-[#A88B5C] hover:text-[#8F7A52] transition-colors touch-manipulation"
           >
-            FOREVER
+            {settings.storeName}
           </motion.button>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -49,8 +51,8 @@ export function Hero() {
             <div className="hidden md:flex items-center gap-3">
               {isAuthenticated ? (
                 <>
-                  <Link 
-                    to="/profile" 
+                  <Link
+                    to="/profile"
                     className="p-2 text-[#5C5852] hover:text-[#A88B5C] transition-colors rounded-full hover:bg-[#FFF8E7]/50"
                     title={user?.name || user?.email || "Profile"}
                   >
@@ -76,7 +78,7 @@ export function Hero() {
               )}
               {/* Admin button - only show to admin users */}
               {isAuthenticated && user?.role === 'admin' && (
-                <Link 
+                <Link
                   to="/admin/dashboard"
                   className="flex items-center gap-2 px-3 py-2 text-xs tracking-wider text-[#A88B5C] hover:text-[#8F7A52] transition-colors touch-manipulation border border-[#A88B5C]/30 hover:border-[#A88B5C] rounded"
                   title="Admin Panel"
@@ -86,7 +88,7 @@ export function Hero() {
                 </Link>
               )}
             </div>
-            <button 
+            <button
               onClick={() => setIsOpen(true)}
               className="relative p-2 hover:text-[#A88B5C] transition-colors touch-manipulation"
             >
@@ -97,7 +99,7 @@ export function Hero() {
                 </span>
               )}
             </button>
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 md:hidden hover:text-[#A88B5C] transition-colors touch-manipulation"
             >
@@ -105,7 +107,7 @@ export function Hero() {
             </button>
           </motion.div>
         </div>
-        
+
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <motion.div
@@ -121,9 +123,9 @@ export function Hero() {
             <div className="border-t border-[#A88B5C]/20 pt-2 space-y-2">
               {isAuthenticated ? (
                 <>
-                  <Link 
-                    to="/profile" 
-                    onClick={() => setMobileMenuOpen(false)} 
+                  <Link
+                    to="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-2 text-xs text-[#5C5852] hover:text-[#A88B5C] transition-colors py-2"
                   >
                     <User size={18} />
@@ -200,7 +202,7 @@ export function Hero() {
                 LEARN MORE
               </motion.button>
             </div>
-            
+
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8 mt-12 sm:mt-16 pt-8 sm:pt-12 border-t border-[#A88B5C]/30">
               <div>
@@ -234,11 +236,11 @@ export function Hero() {
             </div>
             {/* Decorative Elements */}
             <motion.div
-              animate={{ 
+              animate={{
                 rotate: [0, 5, 0],
                 scale: [1, 1.05, 1]
               }}
-              transition={{ 
+              transition={{
                 duration: 8,
                 repeat: Infinity,
                 ease: "easeInOut"
@@ -246,11 +248,11 @@ export function Hero() {
               className="hidden sm:block absolute -top-8 -right-8 w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-[#A88B5C] opacity-20 blur-3xl"
             />
             <motion.div
-              animate={{ 
+              animate={{
                 rotate: [0, -5, 0],
                 scale: [1, 1.1, 1]
               }}
-              transition={{ 
+              transition={{
                 duration: 10,
                 repeat: Infinity,
                 ease: "easeInOut"

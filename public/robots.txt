@@ -1,0 +1,14 @@
+# robots.txt for FOREVER Website
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout
+Disallow: /profile
+
+# Sitemap
+Sitemap: https://forever.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

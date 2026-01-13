@@ -8,6 +8,7 @@ import { productsAPI } from "../services/api";
 import { Footer } from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { Product } from "../data/products";
+import { SEO } from "../components/SEO";
 
 export function ProductsPage() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export function ProductsPage() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -42,7 +44,13 @@ export function ProductsPage() {
   }, []);
 
   return (
-    <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
+    <>
+      <SEO
+        title="Products - FOREVER Luxury Skincare | Shop Premium Beauty Products"
+        description="Browse our complete collection of luxury skincare products. From anti-aging serums to nourishing night creams, discover premium beauty products for radiant, youthful skin."
+        keywords="luxury skincare products, beauty products online, anti-aging serum, night cream, facial treatment, skincare routine, premium cosmetics"
+      />
+      <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-gradient-to-r from-white via-[#FFF8E7]/90 to-white backdrop-blur-sm border-b border-[#A88B5C]/20 px-4 sm:px-6 md:px-12 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -193,6 +201,7 @@ export function ProductsPage() {
 
       <Footer />
     </div>
+    </>
   );
 }
 

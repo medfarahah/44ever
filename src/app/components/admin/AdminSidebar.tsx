@@ -20,7 +20,8 @@ import {
   Bell,
   Shield,
   Building2,
-  CheckCircle
+  CheckCircle,
+  Gift
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState, useEffect } from "react";
@@ -55,6 +56,16 @@ const menuItems = [
       { icon: Plus, label: "Add Product", path: "/admin/products/add" },
       { icon: Edit, label: "Edit Products", path: "/admin/products/edit" },
       { icon: FileText, label: "Categories", path: "/admin/products/categories" },
+    ]
+  },
+  {
+    icon: Gift,
+    label: "Gift Sets",
+    path: "/admin/gift-sets",
+    section: "main",
+    submenu: [
+      { icon: List, label: "All Gift Sets", path: "/admin/gift-sets" },
+      { icon: Plus, label: "Add Gift Set", path: "/admin/gift-sets/add" },
     ]
   },
   {

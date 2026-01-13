@@ -3,12 +3,19 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { Footer } from "../components/Footer";
+import { SEO } from "../components/SEO";
 
 export function StoryPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
+    <>
+      <SEO
+        title="Our Story - FOREVER Luxury Skincare | Crafted with Excellence"
+        description="Discover the story behind FOREVER luxury skincare. Learn about our commitment to premium ingredients, cutting-edge science, and timeless beauty."
+        keywords="forever skincare story, luxury beauty brand, premium cosmetics history, skincare philosophy"
+      />
+      <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-gradient-to-r from-white via-[#FFF8E7]/90 to-white backdrop-blur-sm border-b border-[#A88B5C]/20 px-4 sm:px-6 md:px-12 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -111,5 +118,6 @@ export function StoryPage() {
 
       <Footer />
     </div>
+    </>
   );
 }

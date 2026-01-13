@@ -3,9 +3,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Phone, MapPin, Send } from "lucide-react";
 import { Footer } from "../components/Footer";
+import { SEO } from "../components/SEO";
 
 export function ContactPage() {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,7 +21,13 @@ export function ContactPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
+    <>
+      <SEO
+        title="Contact Us - FOREVER Luxury Skincare | Get in Touch"
+        description="Contact FOREVER luxury skincare. Reach out for product inquiries, customer support, or franchise opportunities. We're here to help you discover premium beauty."
+        keywords="contact forever, luxury skincare contact, customer support, beauty products inquiry"
+      />
+      <div className="bg-gradient-to-br from-white via-[#FFF8E7] to-[#F5E6D3] min-h-screen">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-gradient-to-r from-white via-[#FFF8E7]/90 to-white backdrop-blur-sm border-b border-[#A88B5C]/20 px-4 sm:px-6 md:px-12 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -40,7 +48,7 @@ export function ContactPage() {
             onClick={() => navigate("/")}
             className="text-lg sm:text-xl md:text-2xl tracking-[0.2em] sm:tracking-[0.3em] text-[#A88B5C] hover:text-[#8F7A52] transition-colors touch-manipulation"
           >
-            FOREVER
+            {settings.storeName}
           </motion.button>
         </div>
       </nav>
@@ -78,14 +86,18 @@ export function ContactPage() {
                     <Mail className="text-[#A88B5C]" size={20} />
                     <h3 className="text-lg sm:text-xl text-[#2D2A26]">Email</h3>
                   </div>
-                  <p className="text-sm sm:text-base text-[#5C5852]">hello@forever.com</p>
+                  <a href={`mailto:${settings.email}`} className="text-sm sm:text-base text-[#5C5852] hover:text-[#A88B5C] transition-colors">
+                    {settings.email}
+                  </a>
                 </div>
                 <div>
                   <div className="flex items-center gap-3 mb-3">
                     <Phone className="text-[#A88B5C]" size={20} />
                     <h3 className="text-lg sm:text-xl text-[#2D2A26]">Phone</h3>
                   </div>
-                  <p className="text-sm sm:text-base text-[#5C5852]">+1 (555) 123-4567</p>
+                  <a href={`tel:${settings.phone}`} className="text-sm sm:text-base text-[#5C5852] hover:text-[#A88B5C] transition-colors">
+                    {settings.phone}
+                  </a>
                 </div>
                 <div>
                   <div className="flex items-center gap-3 mb-3">
@@ -164,6 +176,7 @@ export function ContactPage() {
 
       <Footer />
     </div>
+    </>
   );
 }
 
