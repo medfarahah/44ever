@@ -31,11 +31,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware - CORS configuration
-const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
-  : process.env.NODE_ENV === 'production'
-    ? [] // In production, require FRONTEND_URL to be set
-  origin: (origin, callback) => {
+  ?process.env.FRONTEND_URL.split(',').map(url => url.trim())
+  : ['*']; // Fallback to all origins to fix deployment blocking requests
+origin: (origin, callback) => {
   // In production, log the origin and FRONTEND_URL for debugging
   if (process.env.NODE_ENV === 'production') {
     console.log(`[CORS] Request from origin: ${origin}`);
@@ -72,6 +70,11 @@ initializeDatabase().catch(err => {
 });
 
 // Routes
+app.use((req, res, next) => {
+  console.log(`[Request] ${req.method} ${req.url} from ${req.headers.origin || 'unknown'}`);
+  next();
+});
+
 app.use('/api/products', productsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/franchise', franchiseRouter);

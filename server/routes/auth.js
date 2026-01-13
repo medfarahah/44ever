@@ -126,7 +126,11 @@ router.post('/login', async (req, res) => {
 
     if (!user) {
       console.log(`[Login] User not found in database: ${normalizedEmail}`);
-      return res.status(401).json({ error: 'Invalid email or password' });
+      // Temporarily use specific message for debugging
+      return res.status(401).json({
+        error: 'User not found in database',
+        debug: true
+      });
     }
 
     console.log(`[Login] User found: ${user.email}. Role: ${user.role}. Comparing passwords...`);
@@ -138,7 +142,11 @@ router.post('/login', async (req, res) => {
       console.log(`[Login] Password mismatch for user: ${normalizedEmail}`);
       // Log hash prefix for architecture verification (safe to log prefix)
       console.log(`[Login] Stored hash starts with: ${user.password.substring(0, 10)}...`);
-      return res.status(401).json({ error: 'Invalid email or password' });
+      // Temporarily use specific message for debugging
+      return res.status(401).json({
+        error: 'Password mismatch (incorrect password)',
+        debug: true
+      });
     }
 
     console.log(`[Login] Successful login for user: ${normalizedEmail} (${user.role})`);
