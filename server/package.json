@@ -17,6 +17,7 @@
     "test-api": "node test-api.js",
     "check-users": "node scripts/check-users.js",
     "reset-password": "node scripts/reset-password.js",
+    "fix-paths": "node scripts/fix-image-paths.js",
     "startup-check": "node startup-check.js",
     "clear-demo": "node scripts/clear-demo-data.js"
   },

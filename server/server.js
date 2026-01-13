@@ -114,12 +114,12 @@ app.use('/api/franchise', franchiseRouter);
 app.use('/api/customers', customersRouter);
 app.use('/api/auth', authRouter);
 
-// Health check endpoints - must return "OK" for Railway
-app.get('/health', (req, res) => {
+// Health check endpoints
+app.get('/api/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
