@@ -16,6 +16,7 @@
     "make-admin": "node scripts/make-admin.js",
     "test-api": "node test-api.js",
     "check-users": "node scripts/check-users.js",
+    "reset-password": "node scripts/reset-password.js",
     "startup-check": "node startup-check.js",
     "clear-demo": "node scripts/clear-demo-data.js"
   },
