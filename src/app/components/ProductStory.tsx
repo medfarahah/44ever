@@ -21,7 +21,7 @@ export function ProductStory() {
           >
             <div className="relative">
               <ImageWithFallback
-                src="/images/WhatsApp Image 2026-01-09 at 12.28.59 (1).jpeg"
+                src="/images/face-mask.jpg"
                 alt="Luxury skincare ingredients"
                 className="w-full h-auto rounded-sm"
               />
@@ -46,22 +46,22 @@ export function ProductStory() {
             </h2>
             <div className="space-y-4 sm:space-y-6 text-sm sm:text-base text-[#5C5852] leading-relaxed">
               <p>
-                Born from a reverence for nature's ancient wisdom and modern scientific innovation, 
+                Born from a reverence for nature's ancient wisdom and modern scientific innovation,
                 Lumière represents the pinnacle of botanical luxury.
               </p>
               <p>
-                Each drop of our Elixir de Jeunesse is a testament to years of research, 
-                combining rare plant extracts sourced from pristine environments around the globe 
+                Each drop of our Elixir de Jeunesse is a testament to years of research,
+                combining rare plant extracts sourced from pristine environments around the globe
                 with breakthrough skincare technology.
               </p>
               <p>
-                We believe that true beauty radiates from within, enhanced by products that honor 
-                both your skin and the earth. Our commitment to sustainability and efficacy ensures 
+                We believe that true beauty radiates from within, enhanced by products that honor
+                both your skin and the earth. Our commitment to sustainability and efficacy ensures
                 that every application is a moment of transformative self-care.
               </p>
             </div>
-            
-            <motion.div 
+
+            <motion.div
               className="mt-8 sm:mt-10 pt-8 sm:pt-10 border-t border-[#D4C9B3]"
               initial={{ opacity: 0 }}
               animate={isInView ? { opacity: 1 } : {}}

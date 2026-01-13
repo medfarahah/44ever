@@ -103,7 +103,7 @@ export function Benefits() {
           >
             <div className="relative">
               <ImageWithFallback
-                src="/images/WhatsApp Image 2026-01-09 at 12.28.59 (2).jpeg"
+                src="/images/toner.jpg"
                 alt="Beauty and elegance"
                 className="w-full h-auto rounded-sm"
               />

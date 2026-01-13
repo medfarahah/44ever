@@ -229,7 +229,7 @@ export function Hero() {
           >
             <div className="relative z-10">
               <ImageWithFallback
-                src="/images/WhatsApp Image 2026-01-09 at 12.28.59.jpeg"
+                src="/images/golden-serum.jpg"
                 alt="Forever Elixir de Jeunesse"
                 className="w-full h-auto rounded-sm shadow-2xl"
               />
