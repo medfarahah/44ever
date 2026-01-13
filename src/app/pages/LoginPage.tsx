@@ -23,10 +23,11 @@ export function LoginPage() {
       if (result.success) {
         navigate("/");
       } else {
-        setError(result.error || "Invalid email or password");
+        setError(result.error ? `${result.error}` : "Login failed. Check server logs.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      console.error('Login error:', err);
+      setError(err instanceof Error ? `Error: ${err.message}` : "Login failed");
     } finally {
       setIsLoading(false);
     }

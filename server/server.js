@@ -35,21 +35,28 @@ const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
   : process.env.NODE_ENV === 'production'
     ? [] // In production, require FRONTEND_URL to be set
-    : ['http://localhost:5173', 'http://localhost:3000', '*']; // Development defaults
-
-app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, curl, etc.)
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+  // In production, log the origin and FRONTEND_URL for debugging
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`[CORS] Request from origin: ${origin}`);
+    console.log(`[CORS] Allowed origins: ${allowedOrigins.join(', ')}`);
+  }
+
+  // Allow requests with no origin (mobile apps, Postman, etc.)
+  if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    callback(null, true);
+  } else {
+    console.warn(`[CORS] Blocked origin: ${origin}. Not in: ${allowedOrigins.join(', ')}`);
+    // In production, if FRONTEND_URL is missing, we might want to be more helpful
+    if (allowedOrigins.length === 0 && process.env.NODE_ENV === 'production') {
+      console.warn('⚠️ FRONTEND_URL is not set in production. CORS will block all requests.');
     }
-  },
+    callback(new Error(`CORS blocked: ${origin}`));
+  }
+},
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));

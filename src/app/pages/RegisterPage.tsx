@@ -45,10 +45,11 @@ export function RegisterPage() {
       if (result.success) {
         navigate("/");
       } else {
-        setError(result.error || "Registration failed. Please try again.");
+        setError(result.error ? `${result.error}` : "Registration failed. Check server logs.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      console.error('Registration error:', err);
+      setError(err instanceof Error ? `Error: ${err.message}` : "Registration failed");
     } finally {
       setIsLoading(false);
     }
