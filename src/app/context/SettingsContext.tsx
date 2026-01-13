@@ -18,7 +18,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 const defaultSettings: Settings = {
   storeName: 'FOREVER',
   email: 'admin@forever.com',
-  phone: '+1 (555) 123-4567',
+  phone: '+252638596758',
 };
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
